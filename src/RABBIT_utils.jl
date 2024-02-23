@@ -39,3 +39,25 @@ function cropdata_e(data::Vector{Float64}, nw::Int)
     end
     return text
 end
+
+function cropdata_f(data::Vector{Vector{Float64}}, nw::Int)
+    text = ""
+    for i in 1:length(data)
+        text *= cropdata_f(data[i], nw)
+    end 
+    return text 
+end 
+
+function cropdata_e(data::Vector{Vector{Float64}}, nw::Int)
+    text = ""
+    for i in 1:length(data)
+        text *= cropdata_e(data[i], nw)
+    end 
+    return text 
+end 
+
+function get_cp1d_time_slice(dd::IMAS.dd, field::Symbol, time_slice::Int)
+    cp1d = dd.core_profiles.profiles_1d
+    res = getfield(IMAS.freeze(cp1d[time_slice]), field)
+    return res
+end
