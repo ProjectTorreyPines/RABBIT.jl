@@ -2,7 +2,7 @@ Base.@kwdef mutable struct RABBITtimetraces
     n_time::Union{Real,Missing} = missing
     n_rho::Union{Real,Missing} = missing
     time::Union{Vector{Float64},Missing} = missing 
-    rho::Union{Vector{Vector{Float64}},Missing} = missing 
+    rho::Union{Vector{Float64},Missing} = missing 
     te::Union{Vector{Vector{Float64}},Missing} = missing
     ti::Union{Vector{Vector{Float64}},Missing} = missing
     dene::Union{Vector{Vector{Float64}},Missing} = missing
@@ -25,16 +25,15 @@ end
 
 function FUSEtoRABBITtimetraces(dd::IMAS.dd)
     cp1d = dd.core_profiles.profiles_1d
-    ions = cp1d[1].ion
     eV_to_keV = 1e-3
 
     timetraces = RABBITtimetraces()
 
     timetraces.n_time = length(cp1d)
     timetraces.n_rho = length(cp1d[1].grid.rho_tor_norm)
+    timetraces.rho = cp1d[1].grid.rho_tor_norm
 
     timetraces.time = [cp1d[i].time for i in 1:length(cp1d)]
-    timetraces.rho = [get_cp1d_time_slice(dd, :grid, i).rho_tor_norm for i in 1:length(cp1d)]
     timetraces.te = [get_cp1d_time_slice(dd, :electrons, i).temperature * eV_to_keV for i in 1:length(cp1d)]
     timetraces.dene = [get_cp1d_time_slice(dd, :electrons, i).density for i in 1:length(cp1d)]
     timetraces.rot_freq_tor = [get_cp1d_time_slice(dd, :rotation_frequency_tor_sonic, i) for i in 1:length(cp1d)]
@@ -62,7 +61,6 @@ function FUSEtoRABBITtimetraces(dd::IMAS.dd)
 end
 
 function write_timetraces(timetraces::RABBITtimetraces, filename::AbstractString)
-
     nw = 5
     
     open(filename, "w") do io 
@@ -72,9 +70,7 @@ function write_timetraces(timetraces::RABBITtimetraces, filename::AbstractString
         println(io, cropdata_f(timetraces.time, nw))
         println(io, cropdata_f(timetraces.rho, nw))
         println(io, cropdata_f(timetraces.te, nw))
-
-        ### then all the ion temperature profiles ###
-
+        println(io, cropdata_f(timetraces.ti, nw))
         println(io, cropdata_e(timetraces.dene, nw))
         println(io, cropdata_f(timetraces.rot_freq_tor, nw))
         println(io, cropdata_f(timetraces.zeff, nw))
