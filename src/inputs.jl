@@ -26,6 +26,7 @@ end
 function FUSEtoRABBITtimetraces(dd::IMAS.dd)
     cp1d = dd.core_profiles.profiles_1d
     eV_to_keV = 1e-3
+    cm3_to_m3 = 1e-6
 
     timetraces = RABBITtimetraces()
 
@@ -35,7 +36,7 @@ function FUSEtoRABBITtimetraces(dd::IMAS.dd)
 
     timetraces.time = [cp1d[i].time for i in eachindex(cp1d)] .* 1e3
     timetraces.te = [cp1d[i].electrons.temperature .* eV_to_keV for i in eachindex(cp1d)]
-    timetraces.dene = [get_cp1d_time_slice(dd, :electrons, i).density for i in eachindex(cp1d)]
+    timetraces.dene = [get_cp1d_time_slice(dd, :electrons, i).density .* cm3_to_m3 for i in eachindex(cp1d)]
     timetraces.rot_freq_tor = [cp1d[i].rotation_frequency_tor_sonic for i in eachindex(cp1d)]
     timetraces.zeff = [cp1d[i].zeff for i in eachindex(cp1d)]
 
