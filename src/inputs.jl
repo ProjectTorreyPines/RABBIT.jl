@@ -33,17 +33,17 @@ function FUSEtoRABBITtimetraces(dd::IMAS.dd)
     timetraces.n_rho = length(cp1d[1].grid.rho_tor_norm)
     timetraces.rho = cp1d[1].grid.rho_tor_norm
 
-    timetraces.time = [cp1d[i].time for i in 1:length(cp1d)]
-    timetraces.te = [get_cp1d_time_slice(dd, :electrons, i).temperature * eV_to_keV for i in 1:length(cp1d)]
-    timetraces.dene = [get_cp1d_time_slice(dd, :electrons, i).density for i in 1:length(cp1d)]
-    timetraces.rot_freq_tor = [get_cp1d_time_slice(dd, :rotation_frequency_tor_sonic, i) for i in 1:length(cp1d)]
-    timetraces.zeff = [get_cp1d_time_slice(dd, :zeff, i) for i in 1:length(cp1d)]
+    timetraces.time = [cp1d[i].time for i in eachindex(cp1d)] .* 1e3
+    timetraces.te = [cp1d[i].electrons.temperature .* eV_to_keV for i in eachindex(cp1d)]
+    timetraces.dene = [get_cp1d_time_slice(dd, :electrons, i).density for i in eachindex(cp1d)]
+    timetraces.rot_freq_tor = [cp1d[i].rotation_frequency_tor_sonic for i in eachindex(cp1d)]
+    timetraces.zeff = [cp1d[i].zeff for i in eachindex(cp1d)]
 
     ion_temps = []
 
     for j in 1:length(cp1d)
         for i in 1:length(cp1d[1].ion)
-            push!(ion_temps, cp1d[j].ion[i].temperature)
+            push!(ion_temps, cp1d[j].ion[i].temperature .* eV_to_keV)
         end
     end
     
