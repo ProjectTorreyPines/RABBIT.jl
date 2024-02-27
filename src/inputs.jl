@@ -68,14 +68,14 @@ function write_timetraces(timetraces::RABBITtimetraces, filename::AbstractString
         println(io, "         ", timetraces.n_time)
         println(io, "         ", timetraces.n_rho)
         println(io, "rho_tor")
-        println(io, cropdata_f(timetraces.time, nw))
-        println(io, cropdata_f(timetraces.rho, nw))
-        println(io, cropdata_f(timetraces.te, nw))
-        println(io, cropdata_f(timetraces.ti, nw))
-        println(io, cropdata_e(timetraces.dene, nw))
-        println(io, cropdata_f(timetraces.rot_freq_tor, nw))
-        println(io, cropdata_f(timetraces.zeff, nw))
-        println(io, cropdata_f(timetraces.pnbi, nw))
+        print(io, cropdata_f(timetraces.time, nw))
+        print(io, cropdata_f(timetraces.rho, nw))
+        print(io, cropdata_f(timetraces.te, nw))
+        print(io, cropdata_f(timetraces.ti, nw))
+        print(io, cropdata_e(timetraces.dene, nw))
+        print(io, cropdata_f(timetraces.rot_freq_tor, nw))
+        print(io, cropdata_f(timetraces.zeff, nw))
+        print(io, cropdata_f(timetraces.pnbi, nw))
     end
 end
 
