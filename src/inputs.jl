@@ -34,13 +34,8 @@ Base.@kwdef mutable struct RABBITequilibria
     RHO::Union{Vector{Float64},Missing} = missing
 end
 
-# end
 
-# function FUSEtoRABBITbeams()
-    
-# end
 
-# function FUSEtoRABBITequilibria()
 function FUSEtoRABBITequilibria(dd::IMAS.dd)
     eq = dd.equilibrium
     n_time = length(eq.time_slice)
