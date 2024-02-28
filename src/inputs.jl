@@ -11,7 +11,28 @@ Base.@kwdef mutable struct RABBITtimetraces
     pnbi::Union{Array{Float64},Missing} = missing
 end 
 
-# Base.@kwdef mutable struct RABBITbeams
+Base.@kwdef mutable struct RABBITequilibria
+    NW::Union{Int,Missing} = missing
+    NH::Union{Int,Missing} = missing
+    PSIRZ::Union{Matrix{Float64},Missing} = missing
+    NPSI1D::Union{Int,Missing} = missing
+    QPSI::Union{Vector{Float64},Missing} = missing
+    FPOL::Union{Vector{Float64},Missing} = missing
+    SIBRY::Union{Float64,Missing} = missing
+    SIMAG::Union{Float64,Missing} = missing
+    SIGNIP::Union{Float64,Missing} = missing
+    RMAXIS::Union{Float64,Missing} = missing
+    ZMAXIS::Union{Float64,Missing} = missing
+
+    # AuxQuantities
+    R::Union{Vector{Float64},Missing} = missing
+    Z::Union{Vector{Float64},Missing} = missing
+    RHORZ::Union{Matrix{Float64},Missing} = missing
+    PSI::Union{Vector{Float64},Missing} = missing
+    VOL::Union{Vector{Float64},Missing} = missing
+    AREA::Union{Vector{Float64},Missing} = missing
+    RHO::Union{Vector{Float64},Missing} = missing
+end
 
 # end
 
@@ -20,8 +41,21 @@ end
 # end
 
 # function FUSEtoRABBITequilibria()
+function FUSEtoRABBITequilibria(dd::IMAS.dd)
+    eq = dd.equilibrium
+    n_time = length(eq.time_slice)
 
-# end
+    all_equilibria = RABBITequilibria[]
+
+    for i in 2:n_time
+        equ = RABBITequilibria()
+        equ.NW = length(eq.time_slice[i].profiles_2d[1].grid.dim1)
+        push!(all_equilibria, equ)
+    end
+
+    return all_equilibria
+
+end
 
 function FUSEtoRABBITtimetraces(dd::IMAS.dd)
     cp1d = dd.core_profiles.profiles_1d
