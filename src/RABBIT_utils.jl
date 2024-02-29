@@ -34,7 +34,7 @@ function cropdata_e(data::Vector{Float64}, nw::Int)
             for j in start_index:end_index
                 text *= @sprintf("%16.7e", data[j])
             end
-            text *= "\n" # need to remove the new line when it's the last value i.e. don't end with whitespace
+            text *= "\n"
         end
     end
     return text
@@ -56,8 +56,23 @@ function cropdata_e(data::Vector{Vector{Float64}}, nw::Int)
     return text 
 end 
 
-function get_cp1d_time_slice(dd::IMAS.dd, field::Symbol, time_slice::Int)
-    cp1d = dd.core_profiles.profiles_1d
-    res = getfield(IMAS.freeze(cp1d[time_slice]), field)
-    return res
+function cropdata_f(data::Matrix{Float64}, nw::Int)
+    dataf = data[:]
+    cropdata_f(dataf, nw)
+end 
+
+function print6(d)
+    text = ""
+    i0 = 1
+    n = length(d)
+    for i = 1:div(n, 6)
+        row = [ @sprintf("%13.6f", d[j]) for j = i0:i0+5 ]
+        text *= join(row, "") * "\n"
+        i0 += 6
+    end
+    for i = i0:n
+        text *= @sprintf("%13.6f", d[i])
+    end
+    text *= "\n"
+    return text
 end
