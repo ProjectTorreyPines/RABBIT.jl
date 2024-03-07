@@ -56,7 +56,8 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
         end
 
         inp = RABBITinput()
-        inp.time = time
+        inp.time = time * 1e3
+        print("inp.time = ", inp.time)
 
         inp.nw = length(eqt2d.grid.dim1)
         inp.nh = length(eqt2d.grid.dim2)
@@ -81,7 +82,7 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
 
         cp1d = dd.core_profiles.profiles_1d[time]
 
-        inp.rho = range(0.0, stop=1.0, length=100)
+        inp.rho = range(0.0, stop=1.0, length=101)
         inp.n_rho = length(inp.rho)
         inp.te = IMAS.interp1d(cp1d.grid.rho_tor_norm,cp1d.electrons.temperature).(inp.rho) .* eV_to_keV
         inp.dene = IMAS.interp1d(cp1d.grid.rho_tor_norm,cp1d.electrons.density).(inp.rho) .* cm3_to_m3
@@ -106,7 +107,7 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
     end
 
     if length(all_inputs) == 1
-        inp = deepcopy(all_equilibria[1])
+        inp = deepcopy(all_inputs[1])
         inp.time -= 1E6
         push!(all_inputs, inp)
     end
@@ -140,8 +141,15 @@ function write_equilibria(input::RABBITinput, filename::AbstractString)
         print(io, print6(input.r))
         print(io, print6(input.z))
 
-        print(io, print6(input.psirz)) # units seem wrong - divide by 1e3 # in dd units are Wb
-        print(io, print6(input.rhorz))
+        # print(io, print6(input.psirz)) # units seem wrong - divide by 1e3 # in dd units are Wb
+        for i in range(1,length(input.psirz), step = input.nw)
+            print(io, print6(input.psirz[i:i+(input.nw - 1)]))
+        end
+
+        for i in range(1,length(input.rhorz), step = input.nw)
+            print(io, print6(input.rhorz[i:i+(input.nw - 1)]))
+        end
+        # print(io, print6(input.rhorz))
         println(io, "          ", input.npsi1d)
         print(io, print6(input.psi))
         print(io, print6(input.vol)) 
@@ -155,8 +163,27 @@ function write_equilibria(input::RABBITinput, filename::AbstractString)
 end
 
 function write_equilibria(all_inputs::Vector{RABBITinput})
+    mkdir("equ2")
     for i in eachindex(all_inputs)
-        filename = "equ_$i.dat"
+        filename = "equ2/equ_$i.dat"
         write_equilibria(all_inputs[i], filename)
     end
 end
+
+function run_RABBIT(all_inputs::Vector{RABBITinput})
+    # create a directory where all the inputs will be stored
+    mkdir("run")
+    cd("run")
+    # write the equilibria to that directory
+    write_equilibria(all_inputs)
+    # write the timetraces to that directory
+    write_timetraces(all_inputs)
+    # maybe just copy over options.nml and beams.dat for now 
+    
+    # run the executable by pointing it to the correct directory that was just created 
+    # 
+
+end
+# need to write a run directory with the correct structure - equ folder with all equ_*.dat files inside
+# also requires options.nml and beams.dat 
+# then put the rabbit executable here and call it to run the same way that tglf does 
