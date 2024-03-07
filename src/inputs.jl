@@ -57,7 +57,6 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
 
         inp = RABBITinput()
         inp.time = time * 1e3
-        print("inp.time = ", inp.time)
 
         inp.nw = length(eqt2d.grid.dim1)
         inp.nh = length(eqt2d.grid.dim2)
@@ -163,27 +162,10 @@ function write_equilibria(input::RABBITinput, filename::AbstractString)
 end
 
 function write_equilibria(all_inputs::Vector{RABBITinput})
-    mkdir("equ2")
+    mkdir("equ")
     for i in eachindex(all_inputs)
-        filename = "equ2/equ_$i.dat"
+        filename = "equ/equ_$i.dat"
         write_equilibria(all_inputs[i], filename)
     end
 end
 
-function run_RABBIT(all_inputs::Vector{RABBITinput})
-    # create a directory where all the inputs will be stored
-    mkdir("run")
-    cd("run")
-    # write the equilibria to that directory
-    write_equilibria(all_inputs)
-    # write the timetraces to that directory
-    write_timetraces(all_inputs)
-    # maybe just copy over options.nml and beams.dat for now 
-    
-    # run the executable by pointing it to the correct directory that was just created 
-    # 
-
-end
-# need to write a run directory with the correct structure - equ folder with all equ_*.dat files inside
-# also requires options.nml and beams.dat 
-# then put the rabbit executable here and call it to run the same way that tglf does 
