@@ -140,7 +140,6 @@ function write_equilibria(input::RABBITinput, filename::AbstractString)
         print(io, print6(input.r))
         print(io, print6(input.z))
 
-        # print(io, print6(input.psirz)) # units seem wrong - divide by 1e3 # in dd units are Wb
         for i in range(1,length(input.psirz), step = input.nw)
             print(io, print6(input.psirz[i:i+(input.nw - 1)]))
         end
@@ -148,7 +147,6 @@ function write_equilibria(input::RABBITinput, filename::AbstractString)
         for i in range(1,length(input.rhorz), step = input.nw)
             print(io, print6(input.rhorz[i:i+(input.nw - 1)]))
         end
-        # print(io, print6(input.rhorz))
         println(io, "          ", input.npsi1d)
         print(io, print6(input.psi))
         print(io, print6(input.vol)) 
@@ -168,4 +166,3 @@ function write_equilibria(all_inputs::Vector{RABBITinput})
         write_equilibria(all_inputs[i], filename)
     end
 end
-
