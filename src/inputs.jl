@@ -77,7 +77,7 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
         inp.rhorz = eqt2d.phi ./ (pi .* eq.vacuum_toroidal_field.b0[i])
         inp.psi = eqt.profiles_1d.psi
         inp.vol = eqt.profiles_1d.volume
-        inp.area = eqt.profiles_1d.area
+        inp.area = eqt.profiles_1d.area .* 0.0 # this is zeroed out in OMFITrabbitEq class
 
         cp1d = dd.core_profiles.profiles_1d[time]
 
