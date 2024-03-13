@@ -87,7 +87,7 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
 
         rhoprz = sqrt.(psirz_norm)
 
-        # as is done in OMFITrabbitEq class, use rho_tor inside lcfs, rho_pol outside 
+        # as is done in OMFITrabbitEq class, use rho_tor inside lcfs, rho_pol outside (omfit_rabbit.py line 193)
         rhorz[findall(rhorz .> 1)] .= rhoprz[findall(rhorz .> 1)]
         inp.rhorz = rhorz
 
