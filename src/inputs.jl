@@ -74,7 +74,23 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
         inp.r = eqt2d.grid.dim1
         inp.z = eqt2d.grid.dim2
 
-        inp.rhorz = eqt2d.phi ./ (pi .* eq.vacuum_toroidal_field.b0[i])
+        phi = eqt.profiles_1d.phi
+        rhorz_n = eqt2d.phi ./ last(phi)
+        rhorz_sq = map(x -> x < 0 ? 0 : x, rhorz_n)
+        rhorz = sqrt.(rhorz_sq)
+
+        if inp.simag == inp.sibry
+            psirz_norm = abs.(inp.psirz .- inp.simag)
+        else
+            psirz_norm = abs.(inp.psirz .- inp.simag) ./ (inp.sibry - inp.simag)
+        end
+
+        rhoprz = sqrt.(psirz_norm)
+
+        # as is done in OMFITrabbitEq class, use rho_tor inside lcfs, rho_pol outside 
+        rhorz[findall(rhorz .> 1)] .= rhoprz[findall(rhorz .> 1)]
+        inp.rhorz = rhorz
+
         inp.psi = eqt.profiles_1d.psi
         inp.vol = eqt.profiles_1d.volume
         inp.area = eqt.profiles_1d.area .* 0.0 # this is zeroed out in OMFITrabbitEq class
