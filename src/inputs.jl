@@ -200,6 +200,42 @@ function write_equilibria(all_inputs::Vector{RABBITinput})
         write_equilibria(all_inputs[i], filename)
     end
 end
+
+function write_options()
+    table_path = abspath(joinpath(@__DIR__, "tables_ITERDEMO"))
+    open("options.nml", "w") do io 
+        println(io, "&species
+Aimp=12.00
+Zimp=6.00
+/
+&output_settings
+! it_orbout(:) = 71,-1, 115,115,115,115, -1,-1,-1,-1, -1, 200,200, -1
+writedistfun = .True.
+writedepo2d = .True.
+/
+&physics
+jumpcor=2
+Rmax= 2.4
+Rmin = 0.9
+Rlim = 1.00
+zlim = 0.00
+beamlosswall=.false.
+
+table_path=", table_path)
+println(io, "/
+&numerics
+distfun_nv=200
+distfun_vmax=3.3e6
+norbits=50
+/
+&fpsol
+/
+
+        ")
+    end
+
+end
+
 function write_beams(all_inputs::Vector{RABBITinput})
     open("beams.dat", "w") do io
         println(io, "# no. of sources:")
