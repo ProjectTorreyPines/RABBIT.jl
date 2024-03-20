@@ -199,6 +199,7 @@ function write_equilibria(all_inputs::Vector{RABBITinput})
         filename = "equ/equ_$i.dat"
         write_equilibria(all_inputs[i], filename)
     end
+end
 function write_beams(all_inputs::Vector{RABBITinput})
     open("beams.dat", "w") do io
         println(io, "# no. of sources:")
