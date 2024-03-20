@@ -37,6 +37,15 @@ Base.@kwdef mutable struct RABBITinput
     area::Union{Vector{Float64},Missing} = missing
 
     # beams 
+    n_sources::Union{Int,Missing} = missing
+    nv::Union{Int,Missing} = missing
+    start_pos::Union{Vector{Float64},Missing} = missing
+    beam_unit_vector::Union{Vector{Float64},Missing} = missing
+    beam_width_polynomial_coefficients::Union{Vector{Float64},Missing} = missing 
+    injection_energy::Union{Vector{Float64},Missing} = missing
+    particle_fraction::Union{Vector{Float64},Missing} = missing # particle fraction of full/half/third energy
+    a_beam::Union{Vector{Float64},Missing} = missing
+
 end
 
 function FUSEtoRABBITinput(dd::IMAS.dd)
@@ -117,6 +126,15 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
         end
         inp.pnbi = pnbis
 
+        inp.n_sources = length(dd.nbi.unit)
+        inp.injection_energy = dd.nbi.unit[1].energy.data
+        inp.a_beam = [dd.nbi.unit[1].species.a]
+        # the settings below reflect the default beams.dat input file for DIII-D from OMFIT
+        inp.nv = 3
+        inp.start_pos = [5.8049237, 5.6625931, 0.0000000]
+        inp.beam_unit_vector = [ -0.80732305, -0.59010973,0.0000000]
+        inp.beam_width_polynomial_coefficients = [0.0000000, 0.023832953, 0.0000000]
+        inp.particle_fraction = [0.54866257, 0.28995331, 0.16138412]
 
         push!(all_inputs, inp)
     end
@@ -181,4 +199,25 @@ function write_equilibria(all_inputs::Vector{RABBITinput})
         filename = "equ/equ_$i.dat"
         write_equilibria(all_inputs[i], filename)
     end
+function write_beams(all_inputs::Vector{RABBITinput})
+    open("beams.dat", "w") do io
+        println(io, "# no. of sources:")
+        println(io, "        ", all_inputs[1].n_sources)
+        println(io, "# nv:")
+        println(io, "        ", all_inputs[1].nv)
+        println(io, "# start_pos: [m]")
+        println(io, pretty_print_vector(all_inputs[1].start_pos))
+        println(io, "# beam unit vector:")
+        println(io, pretty_print_vector(all_inputs[1].beam_unit_vector))
+        println(io, "# beam-width-polynomial coefficients:")
+        println(io, pretty_print_vector(all_inputs[1].beam_width_polynomial_coefficients))
+        println(io, "# Injection energy [eV]:")
+        println(io, pretty_print_vector(all_inputs[1].injection_energy))
+        println(io, "# Particle fraction of full/half/third energy:")
+        println(io, pretty_print_vector(all_inputs[1].particle_fraction))
+        println(io, "# A beam [u]")
+        println(io, pretty_print_vector(all_inputs[1].a_beam))
+    end
+
+end
 end

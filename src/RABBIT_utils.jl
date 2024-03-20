@@ -76,3 +76,12 @@ function print6(d)
     text *= "\n"
     return text
 end
+
+function pretty_print_vector(data::Vector{Float64})
+    text = "    "
+    for i in 1:length(data)
+        text *= string(data[i])
+        text *= "       "
+    end
+    return text
+end
