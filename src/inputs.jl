@@ -202,7 +202,7 @@ function write_equilibria(all_inputs::Vector{RABBITinput})
 end
 
 function write_options()
-    table_path = abspath(joinpath(@__DIR__, "tables_ITERDEMO"))
+    table_path = abspath(joinpath(dirname(@__DIR__), "tables_ITERDEMO"))
     open("options.nml", "w") do io 
         println(io, "&species
 Aimp=12.00
@@ -221,7 +221,7 @@ Rlim = 1.00
 zlim = 0.00
 beamlosswall=.false.
 
-table_path=", table_path)
+table_path= '", table_path,"'")
 println(io, "/
 &numerics
 distfun_nv=200
