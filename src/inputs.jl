@@ -257,4 +257,31 @@ function write_beams(all_inputs::Vector{RABBITinput})
     end
 
 end
+
+function run_RABBIT(all_inputs::Vector{RABBITinput})
+    exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
+    mkdir("run")
+    cd("run")
+
+    write_equilibria(all_inputs)
+    println("Wrote equilibria")
+
+    write_timetraces(all_inputs)
+    println("Wrote timetraces")
+
+    write_options()
+    println("Wrote options")
+
+    write_beams(all_inputs)
+    println("Wrote beams")
+
+    cd("../")
+    println("Running RABBIT from FUSE!")
+
+    open("command.sh", "w") do io 
+        return write(io, string(exec_path)," run")
+    end
+
+    run(Cmd(`bash command.sh`))
+
 end
