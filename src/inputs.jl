@@ -258,7 +258,7 @@ function write_beams(all_inputs::Vector{RABBITinput})
 
 end
 
-function run_RABBIT(all_inputs::Vector{RABBITinput})
+function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true)
     exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
     mkdir("run")
     cd("run")
@@ -279,9 +279,24 @@ function run_RABBIT(all_inputs::Vector{RABBITinput})
     println("Running RABBIT from FUSE!")
 
     open("command.sh", "w") do io 
-        return write(io, string(exec_path)," run")
+        return write(io, string(exec_path)," run &> command.log")
     end
 
-    run(Cmd(`bash command.sh`))
+    powe_data, powi_data, rho_data, time_data = try
+        run(Cmd(`bash command.sh`))
+        powe_data, powi_data, rho_data, time_data = read_outputs()
+    catch e 
+        txt = open("command.log", "r") do io
+            return split(read(io, String), "\n")
+        end
+        @error "Error running RABBIT" * join(txt[max(1, length(txt) - 50):end], "\n")
+        rethrow(e)
+    end
+
+    if remove_inputs
+        rm("run", recursive = true)
+    end
+
+    return powe_data, powi_data, rho_data, time_data
 
 end

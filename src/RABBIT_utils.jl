@@ -85,3 +85,7 @@ function pretty_print_vector(data::Vector{Float64})
     end
     return text
 end
+
+function struct_unpack(data::Vector{UInt8})
+    return reinterpret(Float32, data)[1]
+end
