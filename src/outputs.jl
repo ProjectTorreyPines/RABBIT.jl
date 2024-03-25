@@ -5,9 +5,9 @@ Base.@kwdef mutable struct RABBIToutputs
     time_data::Union{Vector{<:Real},Vector{Vector{<:Real}},Matrix{<:Real},Missing} = missing
 end
 
-function read_outputs()
+function read_outputs(path::String)
     struct_len = 4 
-    result_path = abspath(joinpath(dirname(@__DIR__), "rtfi_result_oav.bin"))
+    result_path = abspath(joinpath(path, "run/beam1/rtfi_result_oav.bin"))
     
     open(string(result_path), "r") do f
         seekend(f)
