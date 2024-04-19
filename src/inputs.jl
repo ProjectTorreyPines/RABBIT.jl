@@ -70,12 +70,12 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
         inp.nw = length(eqt2d.grid.dim1)
         inp.nh = length(eqt2d.grid.dim2)
 
-        inp.psirz = eqt2d.psi
+        inp.psirz = eqt2d.psi ./ 2pi
         inp.npsi1d = length(eqt.profiles_1d.psi)
         inp.qpsi = abs.(eqt.profiles_1d.q) # RABBIT assumes positive q 
         inp.fpol = eqt.profiles_1d.f
-        inp.sibry = eqt.global_quantities.psi_boundary 
-        inp.simag = eqt.global_quantities.psi_axis
+        inp.sibry = eqt.global_quantities.psi_boundary / 2pi
+        inp.simag = eqt.global_quantities.psi_axis / 2pi
         inp.signip = sign(eqt.global_quantities.ip)
         inp.rmaxis = eqt.global_quantities.magnetic_axis.r
         inp.zmaxis = eqt.global_quantities.magnetic_axis.z 
@@ -100,7 +100,7 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
         rhorz[findall(rhorz .> 1)] .= rhoprz[findall(rhorz .> 1)]
         inp.rhorz = rhorz
 
-        inp.psi = eqt.profiles_1d.psi
+        inp.psi = eqt.profiles_1d.psi ./ 2pi
         inp.vol = eqt.profiles_1d.volume
         inp.area = eqt.profiles_1d.area .* 0.0 # this is zeroed out in OMFITrabbitEq class
 
