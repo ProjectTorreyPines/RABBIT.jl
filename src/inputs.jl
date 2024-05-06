@@ -13,7 +13,7 @@ Base.@kwdef mutable struct RABBITinput
     dene::Union{Vector{Float64},Missing} = missing
     rot_freq_tor::Union{Vector{Float64},Missing} = missing
     zeff::Union{Vector{Float64},Missing} = missing
-    pnbi::Union{Array{Float64},Missing} = missing
+    pnbi::Union{Array{Float64},Missing} = missing 
 
     # equilibria 
     nw::Union{Int,Missing} = missing
@@ -27,6 +27,7 @@ Base.@kwdef mutable struct RABBITinput
     signip::Union{Float64,Missing} = missing
     rmaxis::Union{Float64,Missing} = missing
     zmaxis::Union{Float64,Missing} = missing
+    eq_rho::Union{Vector{Float64}, Missing} = missing
 
     # AuxQuantities
     r::Union{Vector{Float64},Missing} = missing
@@ -58,7 +59,6 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
 
     for (i,eqt) in enumerate(eq.time_slice)
         time = eqt.time
-
         eqt2d = findfirst(:rectangular, eqt.profiles_2d)
         if eqt2d === nothing
             continue
@@ -106,8 +106,10 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
 
         cp1d = dd.core_profiles.profiles_1d[time]
 
-        inp.rho = range(0.0, stop=1.0, length=101)
+        inp.rho = cp1d.grid.rho_tor_norm
+        inp.eq_rho = eqt.profiles_1d.rho_tor_norm
         inp.n_rho = length(inp.rho)
+
         inp.te = IMAS.interp1d(cp1d.grid.rho_tor_norm,cp1d.electrons.temperature).(inp.rho) .* eV_to_keV
         inp.dene = IMAS.interp1d(cp1d.grid.rho_tor_norm,cp1d.electrons.density).(inp.rho) .* cm3_to_m3
         inp.rot_freq_tor = inp.rho .* 0.0
@@ -121,28 +123,36 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
         pnbis = []
         for i in 1:length(dd.nbi.unit)
             for j in 1:length(dd.nbi.unit[1].power_launched.data)
-                push!(pnbis, dd.nbi.unit[i].power_launched.data[j]) # take this from pulse schedule instead 
+                push!(pnbis, dd.nbi.unit[i].power_launched.data[j])
             end
         end
-        inp.pnbi = pnbis
+
+        if length(eq.time_slice) > 2
+            times = ones(length(eq.time_slice) - 1)
+        else
+            times = ones(2)
+        end
+        inp.pnbi = pnbis .* times
 
         inp.n_sources = length(dd.nbi.unit)
         inp.injection_energy = dd.nbi.unit[1].energy.data
         inp.a_beam = [dd.nbi.unit[1].species.a]
+
         # the settings below reflect the default beams.dat input file for DIII-D from OMFIT
         inp.nv = 3
-        inp.start_pos = [5.8049237, 5.6625931, 0.0000000]
-        inp.beam_unit_vector = [ -0.80732305, -0.59010973,0.0000000]
-        inp.beam_width_polynomial_coefficients = [0.0000000, 0.023832953, 0.0000000]
-        inp.particle_fraction = [0.54866257, 0.28995331, 0.16138412]
+        inp.start_pos = [5.804921, 5.6625959, 0.0000000]
+        inp.beam_unit_vector = [ -0.80732277, -0.59011012,0.0000000]
+        inp.beam_width_polynomial_coefficients = [0.0000000, 0.023835, 0.0000000]
+        inp.particle_fraction = [0.52422392, 0.3088602, 0.16691588]
 
         push!(all_inputs, inp)
     end
 
     if length(all_inputs) == 1
         inp = deepcopy(all_inputs[1])
-        inp.time -= 1E6
+        inp.time = -1e6
         push!(all_inputs, inp)
+        reverse!(all_inputs)
     end
 
     return all_inputs
@@ -185,7 +195,7 @@ function write_equilibria(input::RABBITinput, filename::AbstractString)
         print(io, print6(input.psi))
         print(io, print6(input.vol)) 
         print(io, print6(input.area))
-        print(io, print6(input.rho))
+        print(io, print6(input.eq_rho))
         print(io, print6(input.qpsi)) 
         print(io, print6(input.fpol))
         print(io, @sprintf("%12.6f%12.6f%12.6f%12.6f%12.6f\n", input.sibry, input.simag, input.signip, input.rmaxis, input.zmaxis))
@@ -201,7 +211,7 @@ function write_equilibria(all_inputs::Vector{RABBITinput})
     end
 end
 
-function write_options()
+function write_options(all_inputs::Vector{RABBITinput})
     table_path = abspath(joinpath(dirname(@__DIR__), "tables_ITERDEMO"))
     open("options.nml", "w") do io 
         println(io, "&species
@@ -210,7 +220,8 @@ Zimp=6.00
 /
 &output_settings
 ! it_orbout(:) = 71,-1, 115,115,115,115, -1,-1,-1,-1, -1, 200,200, -1
-writedistfun = .True.
+nrhoout=", 20)
+println(io, "writedistfun = .True.
 writedepo2d = .True.
 /
 &physics
@@ -258,10 +269,11 @@ function write_beams(all_inputs::Vector{RABBITinput})
 
 end
 
-function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true)
+function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
     exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
-    mkdir("run")
-    cd("run")
+    @show exec_path
+    mkdir("$filename")
+    cd("$filename")
 
     write_equilibria(all_inputs)
     println("Wrote equilibria")
@@ -279,12 +291,12 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true)
     println("Running RABBIT from FUSE!")
 
     open("command.sh", "w") do io 
-        return write(io, string(exec_path)," run &> command.log")
+        return write(io, string(exec_path)," $filename &> command.log")
     end
 
-    powe_data, powi_data, rho_data, time_data = try
+    powe_data, powi_data, jnbcd_data, rho_data, time_data = try
         run(Cmd(`bash command.sh`))
-        powe_data, powi_data, rho_data, time_data = read_outputs(pwd())
+        powe_data, powi_data, rho_data, time_data = read_outputs(pwd(); filename)
     catch e 
         txt = open("command.log", "r") do io
             return split(read(io, String), "\n")
@@ -294,9 +306,9 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true)
     end
 
     if remove_inputs
-        rm("run", recursive = true)
+        rm("$filename", recursive = true)
     end
 
-    return powe_data, powi_data, rho_data, time_data
+    return powe_data, powi_data, jnbcd_data, rho_data, time_data
 
 end
