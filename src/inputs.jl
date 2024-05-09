@@ -294,9 +294,9 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
         return write(io, string(exec_path)," $filename &> command.log")
     end
 
-    powe_data, powi_data, jnbcd_data, rho_data, time_data = try
+    powe_data, powi_data, jnbcd_data, bdep_data, torqdepo_data, rho_data, time_data = try
         run(Cmd(`bash command.sh`))
-        powe_data, powi_data, rho_data, time_data = read_outputs(pwd(); filename)
+        read_outputs(pwd(); filename)
     catch e 
         txt = open("command.log", "r") do io
             return split(read(io, String), "\n")
@@ -309,6 +309,6 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
         rm("$filename", recursive = true)
     end
 
-    return powe_data, powi_data, jnbcd_data, rho_data, time_data
+    return powe_data, powi_data, jnbcd_data, bdep_data, torqdepo_data, rho_data, time_data
 
 end
