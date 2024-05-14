@@ -1,4 +1,4 @@
-Base.@kwdef mutable struct RABBIToutputs 
+Base.@kwdef mutable struct RABBIToutput 
     powe_data::Union{Matrix{<:Real},Missing} = missing
     powi_data::Union{Matrix{<:Real},Missing} = missing
     jnbcd_data::Union{Matrix{<:Real},Missing} = missing
@@ -50,7 +50,6 @@ function read_outputs(path::String; filename::String ="run")
             for i in 2:(ntime * nrho)
                 dV_data[i] = struct_unpack(read(f, struct_len))
             end
-    
             bdep_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
             bdep_k1_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
 
@@ -63,8 +62,6 @@ function read_outputs(path::String; filename::String ="run")
                 pheatI_data[i] = struct_unpack(read(f, struct_len))
             end
 
-            @show pheatI_data
-    
             pheatE_data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:ntime]
             pheat_data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:ntime]
             pshine_data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:ntime]
@@ -103,49 +100,8 @@ function read_outputs(path::String; filename::String ="run")
                 for i in 1:length(dArea)
                     dArea[i] = struct_unpack(read(f, struct_len))
                 end
-                dArea_data = reshape(dArea, (ntime, nrho))
-        
-                torqdepo = zeros(Float64, nrho * nv * ntime)
-                for i in 1:length(torqdepo)
-                    torqdepo[i] = struct_unpack(read(f, struct_len))
-                end
-                torqdepo_data = reshape(torqdepo, (ntime, nv, nrho))
-        
-                torqjxb = zeros(Float64, nrho * nv * ntime)
-                for i in 1:length(torqjxb)
-                    torqjxb[i] = struct_unpack(read(f, struct_len))
-                end
-                torqjxb_data = reshape(torqjxb, (ntime, nv, nrho))
-        
-                torqe = zeros(Float64, nrho * ntime)
-                for i in 1:length(torqe)
-                    torqe[i] = struct_unpack(read(f, struct_len))
-                end
-                torque_data = reshape(torqe, (ntime, nrho))
-        
-                torqi = zeros(Float64, nrho * ntime)
-                for i in 1:length(torqi)
-                    torqi[i] = struct_unpack(read(f, struct_len))
-                end
-                torqi_data = reshape(torqi, (ntime, nrho))
-            
-                next_line = read(f, struct_len)
-                if isempty(next_line)
-                    break
-                end
-                        
-                if file_size - position(f) >= nrho * ntime * struct_len
-                    wfi_par = zeros(Float64, nrho * ntime)
-                    for i in 1:length(wfi_par)
-                        wfi_par[i] = struct_unpack(read(f, struct_len))
-                    end
-                    wfi_par_data = reshape(wfi_par, (ntime, nrho))
-                    wfi_perp_data = 1.5f0 .* press_data - wfi_par_data
-                end
-            
-                if position(f) < file_size
-                    println("Warning: $(file_size - position(f)) bytes remain in file!")
-                end
+
+                torqdepo_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
             
             return powe_data, powi_data, jnbcd_data, bdep_data, torqdepo_data, rho_data, time_data
         
