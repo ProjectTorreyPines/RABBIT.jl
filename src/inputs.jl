@@ -1,4 +1,4 @@
-using IMAS 
+using IMASDD
 using Printf
 
 Base.@kwdef mutable struct RABBITinput
@@ -49,7 +49,7 @@ Base.@kwdef mutable struct RABBITinput
 
 end
 
-function FUSEtoRABBITinput(dd::IMAS.dd)
+function FUSEtoRABBITinput(dd::IMASDD.dd)
     eV_to_keV = 1e-3
     cm3_to_m3 = 1e-6
 
@@ -110,15 +110,15 @@ function FUSEtoRABBITinput(dd::IMAS.dd)
         inp.eq_rho = eqt.profiles_1d.rho_tor_norm
         inp.n_rho = length(inp.rho)
 
-        inp.te = IMAS.interp1d(cp1d.grid.rho_tor_norm,cp1d.electrons.temperature).(inp.rho) .* eV_to_keV
-        inp.dene = IMAS.interp1d(cp1d.grid.rho_tor_norm,cp1d.electrons.density).(inp.rho) .* cm3_to_m3
+        inp.te = IMASDD.interp1d(cp1d.grid.rho_tor_norm,cp1d.electrons.temperature).(inp.rho) .* eV_to_keV
+        inp.dene = IMASDD.interp1d(cp1d.grid.rho_tor_norm,cp1d.electrons.density).(inp.rho) .* cm3_to_m3
         inp.rot_freq_tor = inp.rho .* 0.0
-        inp.zeff = IMAS.interp1d(cp1d.grid.rho_tor_norm,cp1d.zeff).(inp.rho)
+        inp.zeff = IMASDD.interp1d(cp1d.grid.rho_tor_norm,cp1d.zeff).(inp.rho)
     
         for i in 2:length(cp1d.ion)
             @assert cp1d.ion[1].temperature == cp1d.ion[i].temperature "All ion temperatures should be the same"
         end
-        inp.ti = IMAS.interp1d(cp1d.grid.rho_tor_norm,cp1d.ion[1].temperature).(inp.rho) .* eV_to_keV
+        inp.ti = IMASDD.interp1d(cp1d.grid.rho_tor_norm,cp1d.ion[1].temperature).(inp.rho) .* eV_to_keV
 
         pnbis = []
         for i in 1:length(dd.nbi.unit)

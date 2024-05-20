@@ -4,6 +4,6 @@ authors = ["adrianaghiozzi <67669644+adrianaghiozzi@users.noreply.github.com>"]
 version = "0.1.0"
 
 [deps]
-IMAS = "13ead8c1-b7d1-41bb-a6d0-5b8b65ed587a"
+IMASDD = "06b86afa-9f21-11ec-2ef8-e51b8960cfc5"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
