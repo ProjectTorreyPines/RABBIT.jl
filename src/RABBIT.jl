@@ -1,5 +1,4 @@
 module RABBIT
-using IMAS
 
 include("inputs.jl")
 include("outputs.jl")
