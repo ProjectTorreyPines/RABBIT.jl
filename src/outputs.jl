@@ -1,9 +1,9 @@
 Base.@kwdef mutable struct RABBIToutput 
-    powe_data::Union{Matrix{<:Real},Missing} = missing
-    powi_data::Union{Matrix{<:Real},Missing} = missing
-    jnbcd_data::Union{Matrix{<:Real},Missing} = missing
-    bdep_data::Union{Matrix{<:Real},Array{<:Real},Missing} = missing
-    torque_data::Union{Matrix{<:Real},Array{<:Real},Missing} = missing
+    powe_data::Union{Array{<:Real},Missing} = missing
+    powi_data::Union{Array{<:Real},Missing} = missing
+    jnbcd_data::Union{Array{<:Real},Missing} = missing
+    bdep_data::Union{Array{<:Real},Missing} = missing
+    torque_data::Union{Array{<:Real},Missing} = missing
     rho_data::Union{Vector{<:Real},Missing} = missing
     time_data::Union{Vector{<:Real},Missing} = missing 
 
