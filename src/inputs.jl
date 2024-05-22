@@ -273,7 +273,6 @@ end
 
 function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
     exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
-    @show exec_path
     mkdir("$filename")
     cd("$filename")
 
