@@ -39,81 +39,26 @@ function read_outputs(path::String; filename::String ="run")
             jfi_data = read_and_reshape(f, nrho * ntime, dims=(ntime, nrho))
             jnbcd_data = read_and_reshape(f, nrho * ntime, dims=(ntime, nrho))
     
-            next_line = read(f, struct_len)
-            if isempty(next_line)
-                break
-            end
-
-            dV_data = zeros(Float64, (ntime, nrho))
-            dV_data[1] = struct_unpack(next_line)
-            
-            for i in 2:(ntime * nrho)
-                dV_data[i] = struct_unpack(read(f, struct_len))
-            end
+            dV_data = read_and_reshape(f, ntime * nrho, dims = (ntime, nrho))
             bdep_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
             bdep_k1_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
 
-            next_line = read(f, struct_len)
-            if isempty(next_line)
-                break
-            end
-            pheatI_data = zeros(Float64, ntime)
-            for i in 2:ntime
-                pheatI_data[i] = struct_unpack(read(f, struct_len))
-            end
+            pheatI_data = read_and_reshape(f, ntime, dims=(ntime))
+            pheatE_data = read_and_reshape(f, ntime, dims=(ntime))
+            pheat_data = read_and_reshape(f, ntime, dims=(ntime))
 
-            pheatE_data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:ntime]
-            pheat_data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:ntime]
-            pshine_data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:ntime]
-    
-            # next_line = read(f, struct_len)
-            if isempty(next_line)
-                break
-            end
-    
-            prot_data = zeros(Float64, ntime)
-            prot_data[1] = struct_unpack(read(f, struct_len))
-            for i in 2:ntime
-                prot_data[i] = struct_unpack(read(f, struct_len))[1]
-            end
+            pshine_data = read_and_reshape(f, ntime, dims=(ntime))
+            prot_data = read_and_reshape(f, ntime, dims=(ntime))
             ploss_data = read_and_reshape(f, ntime, dims=(ntime))
-
-            next_line = read(f, struct_len)
-            if isempty(next_line)
-                break
-            end
-            pcx_data = ones(Float64, ntime)
-            pcx_data[1] = struct_unpack(next_line)
-            
-            for i in 2:ntime
-                pcx_data[i] = struct_unpack(read(f, struct_len))
-            end
+            pcx_data = read_and_reshape(f, ntime, dims=(ntime))
 
             if file_size - position(f) > nrho * ntime * struct_len
-                # rabbit_version_strlen_bytes = read(f, Int32)
                 rabbit_version_strlen = reinterpret(Int32, read(f, sizeof(Int32)))
-                @show rabbit_version_strlen
-                rabbit_version_strlen = 10
-                if rabbit_version_strlen > 0
-            
-                # rabbit_version_bytes = read(f, rabbit_version_strlen)
-                # rabbit_version = reinterpret(UInt8, read(f, rabbit_version_strlen))[1]
-                    rabbit_version_bytes = read(f, rabbit_version_strlen)
-                    rabbit_version = String(rabbit_version_bytes)
-                    @show rabbit_version_bytes
-                    @show rabbit_version
+                rabbit_version_bytes = read(f, rabbit_version_strlen[1])
 
-                    dArea = zeros(Float64, nrho * ntime)
-                    for i in 1:length(dArea)
-                        dArea[i] = struct_unpack(read(f, struct_len))
-                    end
-                    @show dArea
-
-                    torqdepo_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
-                    torqjxb_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
-
-                    @show torqjxb_data
-                end
+                dArea = read_and_reshape(f, nrho * ntime, dims=(ntime, nrho))
+                torqdepo_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
+                torqjxb_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
             
             return powe_data, powi_data, jnbcd_data, bdep_data, torqdepo_data, rho_data, time_data
         
