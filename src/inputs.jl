@@ -2,8 +2,8 @@ using IMASDD
 using Printf
 
 Base.@kwdef mutable struct RABBITinput
-    time::Union{Float64,Missing} = missing 
-    rho::Union{Vector{Float64},Missing} = missing 
+    time::Union{Float64,Missing} = missing
+    rho::Union{Vector{Float64},Missing} = missing
 
     # timetraces 
     n_time::Union{Int,Missing} = missing
@@ -13,7 +13,7 @@ Base.@kwdef mutable struct RABBITinput
     dene::Union{Vector{Float64},Missing} = missing
     rot_freq_tor::Union{Vector{Float64},Missing} = missing
     zeff::Union{Vector{Float64},Missing} = missing
-    pnbi::Union{Array{Float64},Missing} = missing 
+    pnbi::Union{Array{Float64},Missing} = missing
 
     # equilibria 
     nw::Union{Int,Missing} = missing
@@ -27,7 +27,7 @@ Base.@kwdef mutable struct RABBITinput
     signip::Union{Float64,Missing} = missing
     rmaxis::Union{Float64,Missing} = missing
     zmaxis::Union{Float64,Missing} = missing
-    eq_rho::Union{Vector{Float64}, Missing} = missing
+    eq_rho::Union{Vector{Float64},Missing} = missing
 
     # AuxQuantities
     r::Union{Vector{Float64},Missing} = missing
@@ -42,7 +42,7 @@ Base.@kwdef mutable struct RABBITinput
     nv::Union{Int,Missing} = missing
     start_pos::Union{Vector{Float64},Missing} = missing
     beam_unit_vector::Union{Vector{Float64},Missing} = missing
-    beam_width_polynomial_coefficients::Union{Vector{Float64},Missing} = missing 
+    beam_width_polynomial_coefficients::Union{Vector{Float64},Missing} = missing
     injection_energy::Union{Vector{Float64},Missing} = missing
     particle_fraction::Union{Vector{Float64},Missing} = missing # particle fraction of full/half/third energy
     a_beam::Union{Vector{Float64},Missing} = missing
@@ -57,7 +57,7 @@ function FUSEtoRABBITinput(dd::IMASDD.dd)
 
     all_inputs = RABBITinput[]
 
-    for (i,eqt) in enumerate(eq.time_slice)
+    for (i, eqt) in enumerate(eq.time_slice)
         time = eqt.time
         eqt2d = findfirst(:rectangular, eqt.profiles_2d)
         if eqt2d === nothing
@@ -78,7 +78,7 @@ function FUSEtoRABBITinput(dd::IMASDD.dd)
         inp.simag = eqt.global_quantities.psi_axis / 2pi
         inp.signip = sign(eqt.global_quantities.ip)
         inp.rmaxis = eqt.global_quantities.magnetic_axis.r
-        inp.zmaxis = eqt.global_quantities.magnetic_axis.z 
+        inp.zmaxis = eqt.global_quantities.magnetic_axis.z
 
         inp.r = eqt2d.grid.dim1
         inp.z = eqt2d.grid.dim2
@@ -110,15 +110,15 @@ function FUSEtoRABBITinput(dd::IMASDD.dd)
         inp.eq_rho = eqt.profiles_1d.rho_tor_norm
         inp.n_rho = length(inp.rho)
 
-        inp.te = IMASDD.interp1d(cp1d.grid.rho_tor_norm,cp1d.electrons.temperature).(inp.rho) .* eV_to_keV
-        inp.dene = IMASDD.interp1d(cp1d.grid.rho_tor_norm,cp1d.electrons.density).(inp.rho) .* cm3_to_m3
+        inp.te = IMASDD.interp1d(cp1d.grid.rho_tor_norm, cp1d.electrons.temperature).(inp.rho) .* eV_to_keV
+        inp.dene = IMASDD.interp1d(cp1d.grid.rho_tor_norm, cp1d.electrons.density).(inp.rho) .* cm3_to_m3
         inp.rot_freq_tor = inp.rho .* 0.0
-        inp.zeff = IMASDD.interp1d(cp1d.grid.rho_tor_norm,cp1d.zeff).(inp.rho)
-    
+        inp.zeff = IMASDD.interp1d(cp1d.grid.rho_tor_norm, cp1d.zeff).(inp.rho)
+
         for i in 2:length(cp1d.ion)
             @assert cp1d.ion[1].temperature == cp1d.ion[i].temperature "All ion temperatures should be the same"
         end
-        inp.ti = IMASDD.interp1d(cp1d.grid.rho_tor_norm,cp1d.ion[1].temperature).(inp.rho) .* eV_to_keV
+        inp.ti = IMASDD.interp1d(cp1d.grid.rho_tor_norm, cp1d.ion[1].temperature).(inp.rho) .* eV_to_keV
 
         pnbis = []
         for i in 1:length(dd.nbi.unit)
@@ -141,7 +141,7 @@ function FUSEtoRABBITinput(dd::IMASDD.dd)
         # the settings below reflect the default beams.dat input file for DIII-D from OMFIT
         inp.nv = 3
         inp.start_pos = [5.804921, 5.6625959, 0.0000000]
-        inp.beam_unit_vector = [ -0.80732277, -0.59011012,0.0000000]
+        inp.beam_unit_vector = [-0.80732277, -0.59011012, 0.0000000]
         inp.beam_width_polynomial_coefficients = [0.0000000, 0.023835, 0.0000000]
         inp.particle_fraction = [0.52422392, 0.3088602, 0.16691588]
 
@@ -161,8 +161,8 @@ end
 
 function write_timetraces(all_inputs::Vector{RABBITinput})
     nw = 5
-    
-    open("timetraces.dat", "w") do io 
+
+    open("timetraces.dat", "w") do io
         println(io, "         ", length(all_inputs))
         println(io, "         ", all_inputs[1].n_rho)
         println(io, "rho_tor")
@@ -178,25 +178,25 @@ function write_timetraces(all_inputs::Vector{RABBITinput})
 end
 
 function write_equilibria(input::RABBITinput, filename::AbstractString)
-    open(filename, "w") do io 
+    open(filename, "w") do io
         println(io, "          ", input.nw)
         println(io, "          ", input.nh)
         print(io, print6(input.r))
         print(io, print6(input.z))
 
-        for i in range(1,length(input.psirz), step = input.nw)
-            print(io, print6(input.psirz[i:i+(input.nw - 1)]))
+        for i in range(1, length(input.psirz), step=input.nw)
+            print(io, print6(input.psirz[i:i+(input.nw-1)]))
         end
 
-        for i in range(1,length(input.rhorz), step = input.nw)
-            print(io, print6(input.rhorz[i:i+(input.nw - 1)]))
+        for i in range(1, length(input.rhorz), step=input.nw)
+            print(io, print6(input.rhorz[i:i+(input.nw-1)]))
         end
         println(io, "          ", input.npsi1d)
         print(io, print6(input.psi))
-        print(io, print6(input.vol)) 
+        print(io, print6(input.vol))
         print(io, print6(input.area))
         print(io, print6(input.eq_rho))
-        print(io, print6(input.qpsi)) 
+        print(io, print6(input.qpsi))
         print(io, print6(input.fpol))
         print(io, @sprintf("%12.6f%12.6f%12.6f%12.6f%12.6f\n", input.sibry, input.simag, input.signip, input.rmaxis, input.zmaxis))
 
@@ -213,7 +213,7 @@ end
 
 function write_options()
     table_path = abspath(joinpath(dirname(@__DIR__), "tables_highRes"))
-    open("options.nml", "w") do io 
+    open("options.nml", "w") do io
         println(io, "&species
 Aimp=12.00
 Zimp=6.00
@@ -233,8 +233,10 @@ Rlim = 2.26
 zlim = -0.05
 torqjxb_model = 3
 beamlosswall=.false.
-table_path= '", table_path,"'")
-println(io, "/
+table_path= '", table_path, "'")
+        println(
+            io,
+            "/
 &numerics
 distfun_nv=20
 distfun_vmax=3.3e6
@@ -245,7 +247,8 @@ vchangecor=.false.
 &fpsol
 /
 
-        ")
+        "
+        )
     end
 end
 
@@ -291,14 +294,14 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
     cd("../")
     println("Running RABBIT from FUSE!")
 
-    open("command.sh", "w") do io 
-        return write(io, string(exec_path)," $filename &> command.log")
+    open("command.sh", "w") do io
+        return write(io, string(exec_path), " $filename &> command.log")
     end
 
     powe_data, powi_data, jnbcd_data, bdep_data, torqdepo_data, rho_data, time_data = try
         run(Cmd(`bash command.sh`))
         read_outputs(pwd(); filename)
-    catch e 
+    catch e
         txt = open("command.log", "r") do io
             return split(read(io, String), "\n")
         end
@@ -307,7 +310,7 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
     end
 
     if remove_inputs
-        rm("$filename", recursive = true)
+        rm("$filename", recursive=true)
     end
 
     return powe_data, powi_data, jnbcd_data, bdep_data, torqdepo_data, rho_data, time_data
