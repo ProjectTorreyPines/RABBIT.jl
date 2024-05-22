@@ -211,40 +211,42 @@ function write_equilibria(all_inputs::Vector{RABBITinput})
     end
 end
 
-function write_options(all_inputs::Vector{RABBITinput})
-    table_path = abspath(joinpath(dirname(@__DIR__), "tables_ITERDEMO"))
+function write_options()
+    table_path = abspath(joinpath(dirname(@__DIR__), "tables_highRes"))
     open("options.nml", "w") do io 
         println(io, "&species
 Aimp=12.00
 Zimp=6.00
 /
 &output_settings
-! it_orbout(:) = 71,-1, 115,115,115,115, -1,-1,-1,-1, -1, 200,200, -1
-nrhoout=", 20)
-println(io, "writedistfun = .True.
-writedepo2d = .True.
+it_orbout(:) = 71,-1, 115,115,115,115, -1,-1,-1,-1, -1, 200,200, -1
+nrhoout = 20
+writedistfun = .false.
+writedepo2d = .false.
 /
 &physics
 jumpcor=2
-Rmax= 2.4
+flast=10.
+Rmax= 2.42
 Rmin = 0.9
-Rlim = 1.00
-zlim = 0.00
+Rlim = 2.26
+zlim = -0.05
+torqjxb_model = 3
 beamlosswall=.false.
-
 table_path= '", table_path,"'")
 println(io, "/
 &numerics
-distfun_nv=200
+distfun_nv=20
 distfun_vmax=3.3e6
-norbits=50
+norbits=200
+rescalecor=.false.
+vchangecor=.false.
 /
 &fpsol
 /
 
         ")
     end
-
 end
 
 function write_beams(all_inputs::Vector{RABBITinput})
