@@ -18,7 +18,7 @@ Base.@kwdef mutable struct RABBITinput
     # equilibria 
     nw::Union{Int,Missing} = missing
     nh::Union{Int,Missing} = missing
-    psirz::Union{Matrix{Float64},Missing} = missing
+    psirz::Union{Array{Float64},Missing} = missing
     npsi1d::Union{Int,Missing} = missing
     qpsi::Union{Vector{Float64},Missing} = missing
     fpol::Union{Vector{Float64},Missing} = missing
@@ -32,7 +32,7 @@ Base.@kwdef mutable struct RABBITinput
     # AuxQuantities
     r::Union{Vector{Float64},Missing} = missing
     z::Union{Vector{Float64},Missing} = missing
-    rhorz::Union{Matrix{Float64},Missing} = missing
+    rhorz::Union{Array{Float64},Missing} = missing
     psi::Union{Vector{Float64},Missing} = missing
     vol::Union{Vector{Float64},Missing} = missing
     area::Union{Vector{Float64},Missing} = missing
