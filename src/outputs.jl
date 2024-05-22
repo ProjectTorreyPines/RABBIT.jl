@@ -31,16 +31,16 @@ function read_outputs(path::String; filename::String ="run")
                 return reshape(data, dims)
             end
     
-            bdens_data = read_and_reshape(f, nrho * ntime, dims=(ntime, nrho))
-            press_data = read_and_reshape(f, nrho * ntime, dims=(ntime, nrho))
-            powe_data = read_and_reshape(f, nrho * ntime, dims=(ntime, nrho))            
-            powi_data = read_and_reshape(f, nrho * ntime, dims=(ntime, nrho))
+            bdens_data = read_and_reshape(f, nrho * ntime, dims=(nrho, ntime))
+            press_data = read_and_reshape(f, nrho * ntime, dims=(nrho, ntime))
+            powe_data = read_and_reshape(f, nrho * ntime, dims=(nrho, ntime))            
+            powi_data = read_and_reshape(f, nrho * ntime, dims=(nrho, ntime))
 
-            jfi_data = read_and_reshape(f, nrho * ntime, dims=(ntime, nrho))
-            jnbcd_data = read_and_reshape(f, nrho * ntime, dims=(ntime, nrho))
+            jfi_data = read_and_reshape(f, nrho * ntime, dims=(nrho, ntime))
+            jnbcd_data = read_and_reshape(f, nrho * ntime, dims=(nrho, ntime))
     
-            dV_data = read_and_reshape(f, ntime * nrho, dims = (ntime, nrho))
-            bdep_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
+            dV_data = read_and_reshape(f, ntime * nrho, dims = (nrho, ntime))
+            bdep_data = read_and_reshape(f, nrho * nv * ntime, dims=(nrho, ntime, nv))
             bdep_k1_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
 
             pheatI_data = read_and_reshape(f, ntime, dims=(ntime))
@@ -56,9 +56,9 @@ function read_outputs(path::String; filename::String ="run")
                 rabbit_version_strlen = reinterpret(Int32, read(f, sizeof(Int32)))
                 rabbit_version_bytes = read(f, rabbit_version_strlen[1])
 
-                dArea = read_and_reshape(f, nrho * ntime, dims=(ntime, nrho))
-                torqdepo_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
-                torqjxb_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
+                dArea = read_and_reshape(f, nrho * ntime, dims=(nrho, ntime))
+                torqdepo_data = read_and_reshape(f, nrho * nv * ntime, dims=(nrho, ntime, nv))
+                torqjxb_data = read_and_reshape(f, nrho * nv * ntime, dims=(nrho, ntime, nv))
             
             return powe_data, powi_data, jnbcd_data, bdep_data, torqdepo_data, rho_data, time_data
         
