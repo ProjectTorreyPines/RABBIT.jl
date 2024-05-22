@@ -66,14 +66,13 @@ function read_outputs(path::String; filename::String ="run")
             pheat_data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:ntime]
             pshine_data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:ntime]
     
-            next_line = read(f, struct_len)
+            # next_line = read(f, struct_len)
             if isempty(next_line)
                 break
             end
     
             prot_data = zeros(Float64, ntime)
             prot_data[1] = struct_unpack(read(f, struct_len))
-
             for i in 2:ntime
                 prot_data[i] = struct_unpack(read(f, struct_len))[1]
             end
@@ -83,7 +82,7 @@ function read_outputs(path::String; filename::String ="run")
             if isempty(next_line)
                 break
             end
-            pcx_data = zeros(Float64, ntime)
+            pcx_data = ones(Float64, ntime)
             pcx_data[1] = struct_unpack(next_line)
             
             for i in 2:ntime
@@ -91,17 +90,30 @@ function read_outputs(path::String; filename::String ="run")
             end
 
             if file_size - position(f) > nrho * ntime * struct_len
-                rabbit_version_strlen_bytes = read(f, struct_len)
+                # rabbit_version_strlen_bytes = read(f, Int32)
+                rabbit_version_strlen = reinterpret(Int32, read(f, sizeof(Int32)))
+                @show rabbit_version_strlen
                 rabbit_version_strlen = 10
+                if rabbit_version_strlen > 0
             
-                rabbit_version_bytes = read(f, rabbit_version_strlen)
-        
-                dArea = zeros(Float64, nrho * ntime)
-                for i in 1:length(dArea)
-                    dArea[i] = struct_unpack(read(f, struct_len))
-                end
+                # rabbit_version_bytes = read(f, rabbit_version_strlen)
+                # rabbit_version = reinterpret(UInt8, read(f, rabbit_version_strlen))[1]
+                    rabbit_version_bytes = read(f, rabbit_version_strlen)
+                    rabbit_version = String(rabbit_version_bytes)
+                    @show rabbit_version_bytes
+                    @show rabbit_version
 
-                torqdepo_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
+                    dArea = zeros(Float64, nrho * ntime)
+                    for i in 1:length(dArea)
+                        dArea[i] = struct_unpack(read(f, struct_len))
+                    end
+                    @show dArea
+
+                    torqdepo_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
+                    torqjxb_data = read_and_reshape(f, nrho * nv * ntime, dims=(ntime, nv, nrho))
+
+                    @show torqjxb_data
+                end
             
             return powe_data, powi_data, jnbcd_data, bdep_data, torqdepo_data, rho_data, time_data
         
