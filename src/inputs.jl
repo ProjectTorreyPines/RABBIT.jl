@@ -305,6 +305,7 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
         txt = open("command.log", "r") do io
             return split(read(io, String), "\n")
         end
+        rm("$filename", recursive=true)
         @error "Error running RABBIT" * join(txt[max(1, length(txt) - 50):end], "\n")
         rethrow(e)
     end
