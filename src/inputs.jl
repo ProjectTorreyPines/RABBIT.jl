@@ -280,19 +280,14 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
     cd("$filename")
 
     write_equilibria(all_inputs)
-    println("Wrote equilibria")
 
     write_timetraces(all_inputs)
-    println("Wrote timetraces")
 
     write_options()
-    println("Wrote options")
 
     write_beams(all_inputs)
-    println("Wrote beams")
 
     cd("../")
-    println("Running RABBIT from FUSE!")
 
     open("command.sh", "w") do io
         return write(io, string(exec_path), " $filename &> command.log")
