@@ -49,6 +49,116 @@ Base.@kwdef mutable struct RABBITinput
 
 end
 
+function FUSEtoRABBITinput(dd::IMASDD.dd)
+    eV_to_keV = 1e-3
+    cm3_to_m3 = 1e-6
+
+    eq = dd.equilibrium
+
+    all_inputs = RABBITinput[]
+
+    for (i, eqt) in enumerate(eq.time_slice)
+        time = eqt.time
+        eqt2d = findfirst(:rectangular, eqt.profiles_2d)
+        if eqt2d === nothing
+            continue
+        end
+
+        inp = RABBITinput()
+        inp.time = time * 1e3
+
+        inp.nw = length(eqt2d.grid.dim1)
+        inp.nh = length(eqt2d.grid.dim2)
+
+        inp.psirz = eqt2d.psi ./ 2pi
+        inp.npsi1d = length(eqt.profiles_1d.psi)
+        inp.qpsi = abs.(eqt.profiles_1d.q) # RABBIT assumes positive q 
+        inp.fpol = eqt.profiles_1d.f
+        inp.sibry = eqt.global_quantities.psi_boundary / 2pi
+        inp.simag = eqt.global_quantities.psi_axis / 2pi
+        inp.signip = sign(eqt.global_quantities.ip)
+        inp.rmaxis = eqt.global_quantities.magnetic_axis.r
+        inp.zmaxis = eqt.global_quantities.magnetic_axis.z
+
+        inp.r = eqt2d.grid.dim1
+        inp.z = eqt2d.grid.dim2
+
+        phi = eqt.profiles_1d.phi
+        rhorz_n = eqt2d.phi ./ last(phi)
+        rhorz_sq = map(x -> x < 0 ? 0 : x, rhorz_n)
+        rhorz = sqrt.(rhorz_sq)
+
+        if inp.simag == inp.sibry
+            psirz_norm = abs.(inp.psirz .- inp.simag)
+        else
+            psirz_norm = abs.(inp.psirz .- inp.simag) ./ (inp.sibry - inp.simag)
+        end
+
+        rhoprz = sqrt.(psirz_norm)
+
+        # as is done in OMFITrabbitEq class, use rho_tor inside lcfs, rho_pol outside (omfit_rabbit.py line 193)
+        rhorz[findall(rhorz .> 1)] .= rhoprz[findall(rhorz .> 1)]
+        inp.rhorz = rhorz
+
+        inp.psi = eqt.profiles_1d.psi ./ 2pi
+        inp.vol = eqt.profiles_1d.volume
+        inp.area = eqt.profiles_1d.area .* 0.0 # this is zeroed out in OMFITrabbitEq class
+
+        cp1d = dd.core_profiles.profiles_1d[time]
+
+        inp.rho = cp1d.grid.rho_tor_norm
+        inp.eq_rho = eqt.profiles_1d.rho_tor_norm
+        inp.n_rho = length(inp.rho)
+
+        inp.te = IMASDD.interp1d(cp1d.grid.rho_tor_norm, cp1d.electrons.temperature).(inp.rho) .* eV_to_keV
+        inp.dene = IMASDD.interp1d(cp1d.grid.rho_tor_norm, cp1d.electrons.density).(inp.rho) .* cm3_to_m3
+        inp.rot_freq_tor = inp.rho .* 0.0
+        inp.zeff = IMASDD.interp1d(cp1d.grid.rho_tor_norm, cp1d.zeff).(inp.rho)
+
+        for i in 2:length(cp1d.ion)
+            @assert cp1d.ion[1].temperature == cp1d.ion[i].temperature "All ion temperatures should be the same"
+        end
+        inp.ti = IMASDD.interp1d(cp1d.grid.rho_tor_norm, cp1d.ion[1].temperature).(inp.rho) .* eV_to_keV
+
+        pnbis = []
+        for i in 1:length(dd.nbi.unit)
+            for j in 1:length(dd.nbi.unit[1].power_launched.data)
+                push!(pnbis, dd.nbi.unit[i].power_launched.data[j])
+            end
+        end
+
+        if length(eq.time_slice) > 2
+            times = ones(length(eq.time_slice) - 1)
+        else
+            times = ones(2)
+        end
+        inp.pnbi = pnbis .* times
+
+        inp.n_sources = length(dd.nbi.unit)
+        inp.injection_energy = dd.nbi.unit[1].energy.data
+        inp.a_beam = [dd.nbi.unit[1].species.a]
+
+        # the settings below reflect the default beams.dat input file for DIII-D from OMFIT
+        inp.nv = 3
+        inp.start_pos = [5.804921, 5.6625959, 0.0000000]
+        inp.beam_unit_vector = [-0.80732277, -0.59011012, 0.0000000]
+        inp.beam_width_polynomial_coefficients = [0.0000000, 0.023835, 0.0000000]
+        inp.particle_fraction = [0.52422392, 0.3088602, 0.16691588]
+
+        push!(all_inputs, inp)
+    end
+
+    if length(all_inputs) == 1
+        inp = deepcopy(all_inputs[1])
+        inp.time = -1e6
+        push!(all_inputs, inp)
+        reverse!(all_inputs)
+    end
+
+    return all_inputs
+
+end
+
 function write_timetraces(all_inputs::Vector{RABBITinput})
     nw = 5
 
@@ -63,9 +173,7 @@ function write_timetraces(all_inputs::Vector{RABBITinput})
         print(io, cropdata_e([all_inputs[i].dene for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f([all_inputs[i].rot_freq_tor for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f([all_inputs[i].zeff for i in eachindex(all_inputs)], nw))
-        for nb in eachindex(all_inputs[1].pnbi)
-            print(io, cropdata_f([all_inputs[i].pnbi[nb] for i in eachindex(all_inputs)], nw))
-        end
+        print(io, cropdata_f(all_inputs[1].pnbi, nw))
     end
 end
 
@@ -107,43 +215,42 @@ function write_options()
     table_path = abspath(joinpath(dirname(@__DIR__), "tables_highRes"))
     open("options.nml", "w") do io
         println(io, "&species
- Aimp=12.00 ! mass of impurity species
- Zimp=6.00 ! charge of impurity species
- /
- &output_settings
- it_orbout(:) = 71,-1, 115,115,115,115, -1,-1,-1,-1, -1, 200,200, -1
- nrhoout = 20 ! length of output rho grid
- writedistfun = .false. ! toggle writing of distribution function
- writedepo2d = .false. ! toggle writing of 2D deposition profile
- /
- &physics
- jumpcor=2 ! smoothed number of gridpoints in plasma center
- flast=10. ! fudge factor in colrad model to increase loss of highest state
- Rmax= 2.42 ! start of NBI rays (m) -> set similar to vacuum vessel
- Rmin = 0.9 ! end of NBI rays (m) -> set similar to vacuum vessel
- Rlim = 2.26 ! flux surface passing through Rlim and zlim is considered as limiter
- zlim = -0.05
- torqjxb_model = 3 ! 0 = no orbit averaging (oav) deposition, 1 = calc jxb, 2 = oav deposition, 3 = calc jxb, but rescale it to match deposited torque
- beamlosswall=.false. ! option to simulate partial beam scraping on the vessel wall - switch off for DIII-D
- table_path= '", table_path, "'")
+Aimp=12.00
+Zimp=6.00
+/
+&output_settings
+it_orbout(:) = 71,-1, 115,115,115,115, -1,-1,-1,-1, -1, 200,200, -1
+nrhoout = 20
+writedistfun = .false.
+writedepo2d = .false.
+/
+&physics
+jumpcor=2
+flast=10.
+Rmax= 2.42
+Rmin = 0.9
+Rlim = 2.26
+zlim = -0.05
+torqjxb_model = 3
+beamlosswall=.false.
+table_path= '", table_path, "'")
         println(
             io,
             "/
- &numerics
- distfun_nv=20 ! number of velocity divisions in distribution function; if 0, no output of distribution function + neutron rate
- distfun_vmax=3.3e6 ! maximum velocity in distribution function (m/s)
- norbits=20 ! number of  orbits (per beam energy component)
- rescalecor=.false.
- vchangecor=.false.
- /
- &fpsol
- /
- 
- 
+&numerics
+distfun_nv=20
+distfun_vmax=3.3e6
+norbits=200
+rescalecor=.false.
+vchangecor=.false.
+/
+&fpsol
+/
+
         "
         )
     end
- end 
+end
 
 function write_beams(all_inputs::Vector{RABBITinput})
     open("beams.dat", "w") do io
@@ -167,32 +274,20 @@ function write_beams(all_inputs::Vector{RABBITinput})
 
 end
 
-"""
-    run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
-
-Writes RABBIT input files (equ_X.dat, timetraces.dat, beams.dat, options.nml) to a run directory and executes RABBIT on that directory. 
-Set remove_inputs=false to keep run directory containing full input and output files. 
-
-"""
-
 function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
     exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
     mkdir("$filename")
+    cd("$filename")
 
-    try
-        cd("$filename")
+    write_equilibria(all_inputs)
 
-        write_equilibria(all_inputs)
+    write_timetraces(all_inputs)
 
-        write_timetraces(all_inputs)
+    write_options()
 
-        write_options()
+    write_beams(all_inputs)
 
-        write_beams(all_inputs)
-
-    finally
-        cd("../")
-    end
+    cd("../")
 
     open("command.sh", "w") do io
         return write(io, string(exec_path), " $filename &> command.log")
