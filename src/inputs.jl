@@ -167,17 +167,21 @@ end
 function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
     exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
     mkdir("$filename")
-    cd("$filename")
 
-    write_equilibria(all_inputs)
+    try
+        cd("$filename")
 
-    write_timetraces(all_inputs)
+        write_equilibria(all_inputs)
 
-    write_options()
+        write_timetraces(all_inputs)
 
-    write_beams(all_inputs)
+        write_options()
 
-    cd("../")
+        write_beams(all_inputs)
+
+    finally
+        cd("../")
+    end
 
     open("command.sh", "w") do io
         return write(io, string(exec_path), " $filename &> command.log")
