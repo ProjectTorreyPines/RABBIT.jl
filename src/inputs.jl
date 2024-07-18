@@ -176,7 +176,6 @@ Set remove_inputs=false to keep run directory containing full input and output f
 """
 
 function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
-    exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
     mkdir("$filename")
 
     try
@@ -195,7 +194,7 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
     end
 
     open("command.sh", "w") do io
-        return write(io, string(exec_path), " $filename &> command.log")
+        return write(io, "rabbit $filename &> command.log")
     end
 
     output = try
