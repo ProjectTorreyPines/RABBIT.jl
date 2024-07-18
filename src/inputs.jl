@@ -130,7 +130,7 @@ function write_options()
  &numerics
  distfun_nv=20 ! number of velocity divisions in distribution function; if 0, no output of distribution function + neutron rate
  distfun_vmax=3.3e6 ! maximum velocity in distribution function (m/s)
- norbits=200 ! number of  orbits (per beam energy component)
+ norbits=20 ! number of  orbits (per beam energy component)
  rescalecor=.false.
  vchangecor=.false.
  /
