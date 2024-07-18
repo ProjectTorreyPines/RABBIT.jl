@@ -63,7 +63,9 @@ function write_timetraces(all_inputs::Vector{RABBITinput})
         print(io, cropdata_e([all_inputs[i].dene for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f([all_inputs[i].rot_freq_tor for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f([all_inputs[i].zeff for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_f([all_inputs[i].pnbi for i in eachindex(all_inputs)], nw))
+        for nb in eachindex(all_inputs[1].pnbi)
+            print(io, cropdata_f([all_inputs[i].pnbi[nb] for i in eachindex(all_inputs)], nw))
+        end
     end
 end
 
