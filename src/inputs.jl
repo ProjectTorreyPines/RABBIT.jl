@@ -105,42 +105,43 @@ function write_options()
     table_path = abspath(joinpath(dirname(@__DIR__), "tables_highRes"))
     open("options.nml", "w") do io
         println(io, "&species
-Aimp=12.00
-Zimp=6.00
-/
-&output_settings
-it_orbout(:) = 71,-1, 115,115,115,115, -1,-1,-1,-1, -1, 200,200, -1
-nrhoout = 20
-writedistfun = .false.
-writedepo2d = .false.
-/
-&physics
-jumpcor=2
-flast=10.
-Rmax= 2.42
-Rmin = 0.9
-Rlim = 2.26
-zlim = -0.05
-torqjxb_model = 3
-beamlosswall=.false.
-table_path= '", table_path, "'")
+ Aimp=12.00 ! mass of impurity species
+ Zimp=6.00 ! charge of impurity species
+ /
+ &output_settings
+ it_orbout(:) = 71,-1, 115,115,115,115, -1,-1,-1,-1, -1, 200,200, -1
+ nrhoout = 20 ! length of output rho grid
+ writedistfun = .false. ! toggle writing of distribution function
+ writedepo2d = .false. ! toggle writing of 2D deposition profile
+ /
+ &physics
+ jumpcor=2 ! smoothed number of gridpoints in plasma center
+ flast=10. ! fudge factor in colrad model to increase loss of highest state
+ Rmax= 2.42 ! start of NBI rays (m) -> set similar to vacuum vessel
+ Rmin = 0.9 ! end of NBI rays (m) -> set similar to vacuum vessel
+ Rlim = 2.26 ! flux surface passing through Rlim and zlim is considered as limiter
+ zlim = -0.05
+ torqjxb_model = 3 ! 0 = no orbit averaging (oav) deposition, 1 = calc jxb, 2 = oav deposition, 3 = calc jxb, but rescale it to match deposited torque
+ beamlosswall=.false. ! option to simulate partial beam scraping on the vessel wall - switch off for DIII-D
+ table_path= '", table_path, "'")
         println(
             io,
             "/
-&numerics
-distfun_nv=20
-distfun_vmax=3.3e6
-norbits=200
-rescalecor=.false.
-vchangecor=.false.
-/
-&fpsol
-/
-
+ &numerics
+ distfun_nv=20 ! number of velocity divisions in distribution function; if 0, no output of distribution function + neutron rate
+ distfun_vmax=3.3e6 ! maximum velocity in distribution function (m/s)
+ norbits=200 ! number of  orbits (per beam energy component)
+ rescalecor=.false.
+ vchangecor=.false.
+ /
+ &fpsol
+ /
+ 
+ 
         "
         )
     end
-end
+ end 
 
 function write_beams(all_inputs::Vector{RABBITinput})
     open("beams.dat", "w") do io
