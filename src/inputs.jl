@@ -63,7 +63,7 @@ function write_timetraces(all_inputs::Vector{RABBITinput})
         print(io, cropdata_e([all_inputs[i].dene for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f([all_inputs[i].rot_freq_tor for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f([all_inputs[i].zeff for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_f(all_inputs[1].pnbi, nw))
+        print(io, cropdata_f([all_inputs[i].pnbi for i in eachindex(all_inputs)], nw))
     end
 end
 
@@ -163,6 +163,14 @@ function write_beams(all_inputs::Vector{RABBITinput})
     end
 
 end
+
+"""
+    run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
+
+Writes RABBIT input files (equ_X.dat, timetraces.dat, beams.dat, options.nml) to a run directory and executes RABBIT on that directory. 
+Set remove_inputs=false to keep run directory containing full input and output files. 
+
+"""
 
 function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
     exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
