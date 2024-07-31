@@ -4,8 +4,8 @@ authors = ["adrianaghiozzi <67669644+adrianaghiozzi@users.noreply.github.com>"]
 version = "1.0.0"
 
 [deps]
-IMASDD = "06b86afa-9f21-11ec-2ef8-e51b8960cfc5"
+IMASdd = "c5a45a97-b3f9-491c-b9a7-aa88c3bc0067"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
 [compat]
-IMASDD = "1"
+IMASdd = "1"
