@@ -1,4 +1,3 @@
-using IMASdd
 using Printf
 
 Base.@kwdef mutable struct RABBITinput
