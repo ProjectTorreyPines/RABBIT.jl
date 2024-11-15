@@ -1,7 +1,7 @@
 name = "RABBIT"
 uuid = "98960a00-302f-469e-9595-275b70d10766"
 authors = ["Adriana Ghiozzi <ghiozzia@fusion.gat.com>"]
-version = "1.0.2"
+version = "1.0.3"
 
 [deps]
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
