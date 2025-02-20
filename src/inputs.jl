@@ -166,6 +166,10 @@ function write_beams(all_inputs::Vector{RABBITinput})
 
 end
 
+function get_beams_from_omfit()
+    run(`python omfit/omfit.py modules/RABBIT/SCRIPTS/rabbit_input_no_gui.py "shot=200204" "output_path='.'"`)
+end
+
 """
     run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
 
@@ -187,7 +191,8 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
 
         write_options()
 
-        write_beams(all_inputs)
+        # write_beams(all_inputs)
+        get_beams_from_omfit()
 
     finally
         cd("../")
@@ -197,7 +202,7 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
         return write(io, string(exec_path), " $filename &> command.log")
     end
 
-    output = try
+    outputs = try
         run(Cmd(`bash command.sh`))
         read_outputs(pwd(); filename)
     catch e
@@ -213,6 +218,6 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
         rm("$filename", recursive=true)
     end
 
-    return output
+    return outputs
 
 end
