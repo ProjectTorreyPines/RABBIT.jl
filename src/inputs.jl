@@ -178,7 +178,7 @@ Set remove_inputs=false to keep run directory containing full input and output f
 
 """
 
-function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
+function run_RABBIT_local(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
     exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
     mkdir("$filename")
 
@@ -191,8 +191,7 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
 
         write_options()
 
-        # write_beams(all_inputs)
-        get_beams_from_omfit()
+        write_beams(all_inputs)
 
     finally
         cd("../")
@@ -200,6 +199,48 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
 
     open("command.sh", "w") do io
         return write(io, string(exec_path), " $filename &> command.log")
+    end
+
+    outputs = try
+        run(Cmd(`bash command.sh`))
+        read_outputs(pwd(); filename)
+    catch e
+        txt = open("command.log", "r") do io
+            return split(read(io, String), "\n")
+        end
+        rm("$filename", recursive=true)
+        @error "Error running RABBIT" * join(txt[max(1, length(txt) - 50):end], "\n")
+        rethrow(e)
+    end
+
+    if remove_inputs
+        rm("$filename", recursive=true)
+    end
+
+    return outputs
+
+end
+
+function run_RABBIT_omega(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
+    mkdir("$filename")
+
+    try
+        cd("$filename")
+
+        write_equilibria(all_inputs)
+
+        write_timetraces(all_inputs)
+
+        write_options()
+
+        get_beams_from_omfit()
+
+    finally
+        cd("../")
+    end
+
+    open("command.sh", "w") do io
+        return write(io, "rabbit $filename &> command.log")
     end
 
     outputs = try
