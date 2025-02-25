@@ -166,8 +166,8 @@ function write_beams(all_inputs::Vector{RABBITinput})
 
 end
 
-function get_beams_from_omfit()
-    run(`python omfit/omfit.py modules/RABBIT/SCRIPTS/rabbit_input_no_gui.py "shot=200204" "output_path='.'"`)
+function get_beams_from_omfit(output_path::String)
+    run(`python /home/ghiozzia/Sources/OMFIT-source/omfit/omfit.py modules/RABBIT/SCRIPTS/rabbit_input_no_gui.py "shot=200204" "output_path='$output_path'"`)
 end
 
 """
@@ -223,6 +223,7 @@ end
 
 function run_RABBIT_omega(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
     mkdir("$filename")
+    output_path = abspath(joinpath(pwd(), filename, "beams.dat"))
 
     try
         cd("$filename")
@@ -233,14 +234,14 @@ function run_RABBIT_omega(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=t
 
         write_options()
 
-        get_beams_from_omfit()
+        get_beams_from_omfit(output_path)
 
     finally
         cd("../")
     end
 
     open("command.sh", "w") do io
-        return write(io, "rabbit $filename &> command.log")
+        return write(io, "/fusion/projects/codes/rabbit/c8/5.0.0/gcc8.x/rabbit $filename &> command.log")
     end
 
     outputs = try
