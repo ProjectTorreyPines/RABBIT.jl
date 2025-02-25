@@ -167,7 +167,7 @@ function write_beams(all_inputs::Vector{RABBITinput})
 end
 
 function get_beams_from_omfit(output_path::String)
-    run(`python /home/ghiozzia/Sources/OMFIT-source/omfit/omfit.py modules/RABBIT/SCRIPTS/rabbit_input_no_gui.py "shot=200204" "output_path='$output_path'"`)
+    run(`python /home/ghiozzia/Sources/OMFIT-source/omfit/omfit.py /home/ghiozzia/Sources/OMFIT-source/modules/RABBIT/SCRIPTS/rabbit_input_no_gui.py "shot=200204" "output_path='$output_path'"`)
 end
 
 """
