@@ -6,14 +6,21 @@ Base.@kwdef mutable struct RABBIToutput
     torqdepo_data::Union{Array{<:Real},Missing} = missing
     rho_data::Union{Vector{<:Real},Missing} = missing
     time_data::Union{Vector{<:Real},Missing} = missing 
+    nrate_data::Union{Array{<:Real}, Missing} = missing
 
 end
 
 function read_outputs(path::String; filename::String ="run")
     struct_len = 4 
     result_path = abspath(joinpath(path, "$filename/beam1/rtfi_result_oav.bin"))
+    nrate_path = abspath(joinpath(path, "$filename/rtfi_nrate_oav.bin"))
 
     output = RABBIToutput()
+
+    function read_and_reshape(f, element_count; dims)
+        data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:element_count]
+        return reshape(data, dims)
+    end
     
     open(string(result_path), "r") do f
         seekend(f)
@@ -27,11 +34,6 @@ function read_outputs(path::String; filename::String ="run")
     
             output.time_data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:ntime]
             output.rho_data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:nrho]
-    
-            function read_and_reshape(f, element_count; dims)
-                data = Float64[struct_unpack(read(f, struct_len)) for _ in 1:element_count]
-                return reshape(data, dims)
-            end
     
             bdens_data = read_and_reshape(f, nrho * ntime, dims=(nrho, ntime))
             press_data = read_and_reshape(f, nrho * ntime, dims=(nrho, ntime))
@@ -61,11 +63,22 @@ function read_outputs(path::String; filename::String ="run")
                 dArea = read_and_reshape(f, nrho * ntime, dims=(nrho, ntime))
                 output.torqdepo_data = read_and_reshape(f, nrho * nv * ntime, dims=(nrho, ntime, nv))
                 torqjxb_data = read_and_reshape(f, nrho * nv * ntime, dims=(nrho, ntime, nv))
-            
-            return output
-        
+                    
             break
             end
         end
-    end   
+    end 
+    
+    open(string(nrate_path), "r") do f
+        seekstart(f)
+
+        nrho = length(output.rho_data)
+        ntime = length(output.time_data)
+        while !eof(f)
+            output.nrate_data = read_and_reshape(f, nrho * ntime, dims = (nrho, ntime))
+        end
+    end
+
+    return output
+
 end
