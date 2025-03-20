@@ -39,12 +39,12 @@ Base.@kwdef mutable struct RABBITinput
     # beams 
     n_sources::Union{Int,Missing} = missing
     nv::Union{Int,Missing} = missing
-    start_pos::Union{Vector{Float64},Missing} = missing
-    beam_unit_vector::Union{Vector{Float64},Missing} = missing
-    beam_width_polynomial_coefficients::Union{Vector{Float64},Missing} = missing
-    injection_energy::Union{Vector{Float64},Missing} = missing
-    particle_fraction::Union{Vector{Float64},Missing} = missing # particle fraction of full/half/third energy
-    a_beam::Union{Vector{Float64},Missing} = missing
+    start_pos::Union{Array{Float64},Missing} = missing
+    beam_unit_vector::Union{Array{Float64},Missing} = missing
+    beam_width_polynomial_coefficients::Union{Array{Float64},Missing} = missing
+    injection_energy::Union{Array{Float64},Missing} = missing
+    particle_fraction::Union{Array{Float64},Missing} = missing # particle fraction of full/half/third energy
+    a_beam::Union{Array{Float64},Missing} = missing
 
 end
 
@@ -62,9 +62,7 @@ function write_timetraces(all_inputs::Vector{RABBITinput})
         print(io, cropdata_e([all_inputs[i].dene for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f([all_inputs[i].rot_freq_tor for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f([all_inputs[i].zeff for i in eachindex(all_inputs)], nw))
-        for nb in eachindex(all_inputs[1].pnbi)
-            print(io, cropdata_f([all_inputs[i].pnbi[nb] for i in eachindex(all_inputs)], nw))
-        end
+        print(io, cropdata_f([all_inputs[i].pnbi for i in eachindex(all_inputs)], nw))
     end
 end
 
