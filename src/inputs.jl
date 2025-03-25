@@ -12,7 +12,7 @@ Base.@kwdef mutable struct RABBITinput
     dene::Union{Vector{Float64},Missing} = missing
     rot_freq_tor::Union{Vector{Float64},Missing} = missing
     zeff::Union{Vector{Float64},Missing} = missing
-    pnbi::Union{Array{Float64},Missing} = missing
+    pnbi::Union{Vector{Vector{Float64}},Missing} = missing
 
     # equilibria 
     nw::Union{Int,Missing} = missing
@@ -62,7 +62,7 @@ function write_timetraces(all_inputs::Vector{RABBITinput})
         print(io, cropdata_e([all_inputs[i].dene for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f([all_inputs[i].rot_freq_tor for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f([all_inputs[i].zeff for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_f([all_inputs[i].pnbi for i in eachindex(all_inputs)], nw))
+        print(io, cropdata_f(all_inputs[1].pnbi, nw))
     end
 end
 
@@ -149,17 +149,17 @@ function write_beams(all_inputs::Vector{RABBITinput})
         println(io, "# nv:")
         println(io, "        ", all_inputs[1].nv)
         println(io, "# start_pos: [m]")
-        println(io, pretty_print_vector(all_inputs[1].start_pos))
+        print(io, cropdata_f(all_inputs[1].start_pos, 3))
         println(io, "# beam unit vector:")
-        println(io, pretty_print_vector(all_inputs[1].beam_unit_vector))
+        print(io, cropdata_f(all_inputs[1].beam_unit_vector, 3))
         println(io, "# beam-width-polynomial coefficients:")
-        println(io, pretty_print_vector(all_inputs[1].beam_width_polynomial_coefficients))
+        print(io, cropdata_f(all_inputs[1].beam_width_polynomial_coefficients, 3))
         println(io, "# Injection energy [eV]:")
-        println(io, pretty_print_vector(all_inputs[1].injection_energy))
+        print(io, cropdata_f(all_inputs[1].injection_energy, 5))
         println(io, "# Particle fraction of full/half/third energy:")
-        println(io, pretty_print_vector(all_inputs[1].particle_fraction))
+        print(io, cropdata_f(all_inputs[1].particle_fraction, 3))
         println(io, "# A beam [u]")
-        println(io, pretty_print_vector(all_inputs[1].a_beam))
+        print(io, cropdata_f(all_inputs[1].a_beam, 5))
     end
 
 end
@@ -183,9 +183,9 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
 
         write_timetraces(all_inputs)
 
-        write_options()
-
         write_beams(all_inputs)
+
+        write_options()
 
     finally
         cd("../")
