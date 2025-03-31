@@ -100,7 +100,7 @@ function write_equilibria(all_inputs::Vector{RABBITinput})
     end
 end
 
-function write_options()
+function write_options(vessel_hfs::Float64, vessel_lfs::Float64)
     table_path = abspath(joinpath(dirname(@__DIR__), "tables_highRes"))
     open("options.nml", "w") do io
         println(io, "&species
@@ -116,8 +116,10 @@ function write_options()
  &physics
  jumpcor=2 ! smoothed number of gridpoints in plasma center
  flast=10. ! fudge factor in colrad model to increase loss of highest state
- Rmax= 2.42 ! start of NBI rays (m) -> set similar to vacuum vessel
- Rmin = 0.9 ! end of NBI rays (m) -> set similar to vacuum vessel
+ Rmax = ", vessel_lfs)
+        println(io," ! start of NBI rays (m) -> set similar to vacuum vessel
+ Rmin = ", vessel_hfs)
+        println(io," ! end of NBI rays (m) -> set similar to vacuum vessel
  Rlim = 2.26 ! flux surface passing through Rlim and zlim is considered as limiter
  zlim = -0.05
  torqjxb_model = 3 ! 0 = no orbit averaging (oav) deposition, 1 = calc jxb, 2 = oav deposition, 3 = calc jxb, but rescale it to match deposited torque
@@ -172,7 +174,7 @@ Set remove_inputs=false to keep run directory containing full input and output f
 
 """
 
-function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
+function run_RABBIT(all_inputs::Vector{RABBITinput}, vessel_hfs::Float64, vessel_lfs::Float64; remove_inputs::Bool=true, filename::String="run")
     exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
     mkdir("$filename")
 
@@ -185,7 +187,7 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
 
         write_beams(all_inputs)
 
-        write_options()
+        write_options(vessel_hfs, vessel_lfs)
 
     finally
         cd("../")
