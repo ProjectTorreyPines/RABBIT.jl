@@ -48,20 +48,41 @@ Base.@kwdef mutable struct RABBITinput
 
 end
 
-function write_timetraces(all_inputs::Vector{RABBITinput})
-    nw = 5
+Base.@kwdef mutable struct Timetraces
+    te::Union{Vector{Vector{Float64}}, Missing}
+    ti::Union{Vector{Vector{Float64}}, Missing}
+    dene::Union{Vector{Vector{Float64}}, Missing}
+    rot_freq_tor::Union{Vector{Vector{Float64}}, Missing}
+    zeff::Union{Vector{Vector{Float64}}, Missing}
+end
 
+function extract_timetraces(all_inputs, varname)
+    n_timeslices = length(all_inputs)
+    n_rho = length(all_inputs[1].te)
+    return [ [getfield(all_inputs[itime], varname)[irho] for itime in 1:n_timeslices] for irho in 1:n_rho ]
+end
+
+
+function write_timetraces(all_inputs::Vector{RABBITinput})
+    timetraces = Timetraces(
+    extract_timetraces(all_inputs, :te),
+    extract_timetraces(all_inputs, :ti),
+    extract_timetraces(all_inputs, :dene),
+    extract_timetraces(all_inputs, :rot_freq_tor),
+    extract_timetraces(all_inputs, :zeff))
+
+    nw = 5
     open("timetraces.dat", "w") do io
         println(io, "         ", length(all_inputs))
         println(io, "         ", all_inputs[1].n_rho)
         println(io, "rho_tor")
         print(io, cropdata_f([all_inputs[i].time for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f(all_inputs[1].rho, nw))
-        print(io, cropdata_f([all_inputs[i].te for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_f([all_inputs[i].ti for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_e([all_inputs[i].dene for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_f([all_inputs[i].rot_freq_tor for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_f([all_inputs[i].zeff for i in eachindex(all_inputs)], nw))
+        print(io, cropdata_f([timetraces.te[i] for i in 1:length(timetraces.te)], nw))
+        print(io, cropdata_f([timetraces.ti[i] for i in 1:length(timetraces.ti)], nw))
+        print(io, cropdata_e([timetraces.dene[i] for i in 1:length(timetraces.dene)], nw))
+        print(io, cropdata_f([timetraces.rot_freq_tor[i] for i in 1:length(timetraces.rot_freq_tor)], nw))
+        print(io, cropdata_f([timetraces.zeff[i] for i in 1:length(timetraces.zeff)], nw))
         print(io, cropdata_f(all_inputs[1].pnbi, nw))
     end
 end
