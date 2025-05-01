@@ -12,7 +12,7 @@ Base.@kwdef mutable struct RABBITinput
     dene::Union{Vector{Float64},Missing} = missing
     rot_freq_tor::Union{Vector{Float64},Missing} = missing
     zeff::Union{Vector{Float64},Missing} = missing
-    pnbi::Union{Array{Float64},Missing} = missing
+    pnbi::Union{Vector{Vector{Float64}},Missing} = missing
 
     # equilibria 
     nw::Union{Int,Missing} = missing
@@ -39,32 +39,51 @@ Base.@kwdef mutable struct RABBITinput
     # beams 
     n_sources::Union{Int,Missing} = missing
     nv::Union{Int,Missing} = missing
-    start_pos::Union{Vector{Float64},Missing} = missing
-    beam_unit_vector::Union{Vector{Float64},Missing} = missing
-    beam_width_polynomial_coefficients::Union{Vector{Float64},Missing} = missing
-    injection_energy::Union{Vector{Float64},Missing} = missing
-    particle_fraction::Union{Vector{Float64},Missing} = missing # particle fraction of full/half/third energy
-    a_beam::Union{Vector{Float64},Missing} = missing
+    start_pos::Union{Array{Float64},Missing} = missing
+    beam_unit_vector::Union{Array{Float64},Missing} = missing
+    beam_width_polynomial_coefficients::Union{Array{Float64},Missing} = missing
+    injection_energy::Union{Array{Float64},Missing} = missing
+    particle_fraction::Union{Array{Float64},Missing} = missing # particle fraction of full/half/third energy
+    a_beam::Union{Array{Float64},Missing} = missing
 
 end
 
-function write_timetraces(all_inputs::Vector{RABBITinput})
-    nw = 5
+Base.@kwdef mutable struct Timetraces
+    te::Union{Vector{Vector{Float64}}, Missing}
+    ti::Union{Vector{Vector{Float64}}, Missing}
+    dene::Union{Vector{Vector{Float64}}, Missing}
+    rot_freq_tor::Union{Vector{Vector{Float64}}, Missing}
+    zeff::Union{Vector{Vector{Float64}}, Missing}
+end
 
+function extract_timetraces(all_inputs, varname)
+    n_timeslices = length(all_inputs)
+    n_rho = length(all_inputs[1].te)
+    return [ [getfield(all_inputs[itime], varname)[irho] for itime in 1:n_timeslices] for irho in 1:n_rho ]
+end
+
+
+function write_timetraces(all_inputs::Vector{RABBITinput})
+    timetraces = Timetraces(
+    extract_timetraces(all_inputs, :te),
+    extract_timetraces(all_inputs, :ti),
+    extract_timetraces(all_inputs, :dene),
+    extract_timetraces(all_inputs, :rot_freq_tor),
+    extract_timetraces(all_inputs, :zeff))
+
+    nw = 5
     open("timetraces.dat", "w") do io
         println(io, "         ", length(all_inputs))
         println(io, "         ", all_inputs[1].n_rho)
         println(io, "rho_tor")
         print(io, cropdata_f([all_inputs[i].time for i in eachindex(all_inputs)], nw))
         print(io, cropdata_f(all_inputs[1].rho, nw))
-        print(io, cropdata_f([all_inputs[i].te for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_f([all_inputs[i].ti for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_e([all_inputs[i].dene for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_f([all_inputs[i].rot_freq_tor for i in eachindex(all_inputs)], nw))
-        print(io, cropdata_f([all_inputs[i].zeff for i in eachindex(all_inputs)], nw))
-        for nb in eachindex(all_inputs[1].pnbi)
-            print(io, cropdata_f([all_inputs[i].pnbi[nb] for i in eachindex(all_inputs)], nw))
-        end
+        print(io, cropdata_f([timetraces.te[i] for i in 1:length(timetraces.te)], nw))
+        print(io, cropdata_f([timetraces.ti[i] for i in 1:length(timetraces.ti)], nw))
+        print(io, cropdata_e([timetraces.dene[i] for i in 1:length(timetraces.dene)], nw))
+        print(io, cropdata_f([timetraces.rot_freq_tor[i] for i in 1:length(timetraces.rot_freq_tor)], nw))
+        print(io, cropdata_f([timetraces.zeff[i] for i in 1:length(timetraces.zeff)], nw))
+        print(io, cropdata_f(all_inputs[1].pnbi, nw))
     end
 end
 
@@ -102,7 +121,7 @@ function write_equilibria(all_inputs::Vector{RABBITinput})
     end
 end
 
-function write_options()
+function write_options(vessel_hfs::Float64, vessel_lfs::Float64)
     table_path = abspath(joinpath(dirname(@__DIR__), "tables_highRes"))
     open("options.nml", "w") do io
         println(io, "&species
@@ -118,8 +137,10 @@ function write_options()
  &physics
  jumpcor=2 ! smoothed number of gridpoints in plasma center
  flast=10. ! fudge factor in colrad model to increase loss of highest state
- Rmax= 2.42 ! start of NBI rays (m) -> set similar to vacuum vessel
- Rmin = 0.9 ! end of NBI rays (m) -> set similar to vacuum vessel
+ Rmax = ", vessel_lfs)
+        println(io," ! start of NBI rays (m) -> set similar to vacuum vessel
+ Rmin = ", vessel_hfs)
+        println(io," ! end of NBI rays (m) -> set similar to vacuum vessel
  Rlim = 2.26 ! flux surface passing through Rlim and zlim is considered as limiter
  zlim = -0.05
  torqjxb_model = 3 ! 0 = no orbit averaging (oav) deposition, 1 = calc jxb, 2 = oav deposition, 3 = calc jxb, but rescale it to match deposited torque
@@ -151,17 +172,17 @@ function write_beams(all_inputs::Vector{RABBITinput})
         println(io, "# nv:")
         println(io, "        ", all_inputs[1].nv)
         println(io, "# start_pos: [m]")
-        println(io, pretty_print_vector(all_inputs[1].start_pos))
+        print(io, cropdata_f(all_inputs[1].start_pos, 3))
         println(io, "# beam unit vector:")
-        println(io, pretty_print_vector(all_inputs[1].beam_unit_vector))
+        print(io, cropdata_f(all_inputs[1].beam_unit_vector, 3))
         println(io, "# beam-width-polynomial coefficients:")
-        println(io, pretty_print_vector(all_inputs[1].beam_width_polynomial_coefficients))
+        print(io, cropdata_f(all_inputs[1].beam_width_polynomial_coefficients, 3))
         println(io, "# Injection energy [eV]:")
-        println(io, pretty_print_vector(all_inputs[1].injection_energy))
+        print(io, cropdata_f(all_inputs[1].injection_energy, 5))
         println(io, "# Particle fraction of full/half/third energy:")
-        println(io, pretty_print_vector(all_inputs[1].particle_fraction))
+        print(io, cropdata_f(all_inputs[1].particle_fraction, 3))
         println(io, "# A beam [u]")
-        println(io, pretty_print_vector(all_inputs[1].a_beam))
+        print(io, cropdata_f(all_inputs[1].a_beam, 5))
     end
 
 end
@@ -174,7 +195,7 @@ Set remove_inputs=false to keep run directory containing full input and output f
 
 """
 
-function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
+function run_RABBIT(all_inputs::Vector{RABBITinput}, vessel_hfs::Float64, vessel_lfs::Float64; remove_inputs::Bool=true, filename::String="run")
     exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
     mkdir("$filename")
 
@@ -185,9 +206,9 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, f
 
         write_timetraces(all_inputs)
 
-        write_options()
-
         write_beams(all_inputs)
+
+        write_options(vessel_hfs, vessel_lfs)
 
     finally
         cd("../")

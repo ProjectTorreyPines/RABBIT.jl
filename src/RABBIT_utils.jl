@@ -4,7 +4,12 @@ function cropdata_f(data::Vector{Float64}, nw::Int)
     text = ""
     if length(data) < nw
         for j in 1:length(data)
-            text *= @sprintf("       %8.7f", data[j])[1:16]
+            if data[j] < 0
+                formatted_value = @sprintf("      %8.7f", data[j])[1:16]  # One less space for negatives
+            else
+                formatted_value = @sprintf("       %8.7f", data[j])[1:16]
+            end
+            text *= formatted_value
         end
         text *= "\n"
     else
@@ -12,7 +17,12 @@ function cropdata_f(data::Vector{Float64}, nw::Int)
             start_index = i * nw + 1
             end_index = min((i + 1) * nw, length(data))
             for j in start_index:end_index
-                text *= @sprintf("       %8.7f", data[j])[1:16]
+                if data[j] < 0
+                    formatted_value = @sprintf("      %8.7f", data[j])[1:16]  # One less space for negatives
+                else
+                    formatted_value = @sprintf("       %8.7f", data[j])[1:16]
+                end
+                text *= formatted_value
             end
             text *= "\n"
         end
