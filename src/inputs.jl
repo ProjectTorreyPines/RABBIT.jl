@@ -216,12 +216,12 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}, vessel_hfs::Float64, vessel
     end
 
     open("command.sh", "w") do io
-        return write(io, string(exec_path), " $filename &> command.log")
+        return write(io, string(exec_path), " $folder &> command.log")
     end
 
     output = try
         run(Cmd(`bash command.sh`))
-        read_outputs(pwd(); filename)
+        read_outputs(pwd(), folder)
     catch e
         txt = open("command.log", "r") do io
             return split(read(io, String), "\n")

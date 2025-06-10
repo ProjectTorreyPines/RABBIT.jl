@@ -9,7 +9,7 @@ Base.@kwdef mutable struct RABBIToutput
     time_data::Union{Vector{<:Real},Missing} = missing 
 end
 
-function read_outputs(path::String; filename::String ="run")
+function read_outputs(path::String, filename::String)
     struct_len = 4 
 
     outputs = RABBIToutput[]
