@@ -49,27 +49,27 @@ Base.@kwdef mutable struct RABBITinput
 end
 
 Base.@kwdef mutable struct Timetraces
-    te::Union{Vector{Vector{Float64}}, Missing}
-    ti::Union{Vector{Vector{Float64}}, Missing}
-    dene::Union{Vector{Vector{Float64}}, Missing}
-    rot_freq_tor::Union{Vector{Vector{Float64}}, Missing}
-    zeff::Union{Vector{Vector{Float64}}, Missing}
+    te::Union{Vector{Vector{Float64}},Missing}
+    ti::Union{Vector{Vector{Float64}},Missing}
+    dene::Union{Vector{Vector{Float64}},Missing}
+    rot_freq_tor::Union{Vector{Vector{Float64}},Missing}
+    zeff::Union{Vector{Vector{Float64}},Missing}
 end
 
 function extract_timetraces(all_inputs, varname)
     n_timeslices = length(all_inputs)
     n_rho = length(all_inputs[1].te)
-    return [ [getfield(all_inputs[itime], varname)[irho] for itime in 1:n_timeslices] for irho in 1:n_rho ]
+    return [[getfield(all_inputs[itime], varname)[irho] for itime in 1:n_timeslices] for irho in 1:n_rho]
 end
 
 
 function write_timetraces(all_inputs::Vector{RABBITinput})
     timetraces = Timetraces(
-    extract_timetraces(all_inputs, :te),
-    extract_timetraces(all_inputs, :ti),
-    extract_timetraces(all_inputs, :dene),
-    extract_timetraces(all_inputs, :rot_freq_tor),
-    extract_timetraces(all_inputs, :zeff))
+        extract_timetraces(all_inputs, :te),
+        extract_timetraces(all_inputs, :ti),
+        extract_timetraces(all_inputs, :dene),
+        extract_timetraces(all_inputs, :rot_freq_tor),
+        extract_timetraces(all_inputs, :zeff))
 
     nw = 5
     open("timetraces.dat", "w") do io
@@ -83,7 +83,7 @@ function write_timetraces(all_inputs::Vector{RABBITinput})
         print(io, cropdata_e([timetraces.dene[i] for i in 1:length(timetraces.dene)], nw))
         print(io, cropdata_f([timetraces.rot_freq_tor[i] for i in 1:length(timetraces.rot_freq_tor)], nw))
         print(io, cropdata_f([timetraces.zeff[i] for i in 1:length(timetraces.zeff)], nw))
-        print(io, cropdata_f(all_inputs[1].pnbi, nw))
+        return print(io, cropdata_f(all_inputs[1].pnbi, nw))
     end
 end
 
@@ -94,11 +94,11 @@ function write_equilibria(input::RABBITinput, filename::AbstractString)
         print(io, print6(input.r))
         print(io, print6(input.z))
 
-        for i in range(1, length(input.psirz), step=input.nw)
+        for i in range(1, length(input.psirz); step=input.nw)
             print(io, print6(input.psirz[i:i+(input.nw-1)]))
         end
 
-        for i in range(1, length(input.rhorz), step=input.nw)
+        for i in range(1, length(input.rhorz); step=input.nw)
             print(io, print6(input.rhorz[i:i+(input.nw-1)]))
         end
         println(io, "          ", input.npsi1d)
@@ -108,7 +108,7 @@ function write_equilibria(input::RABBITinput, filename::AbstractString)
         print(io, print6(input.eq_rho))
         print(io, print6(input.qpsi))
         print(io, print6(input.fpol))
-        print(io, @sprintf("%12.6f%12.6f%12.6f%12.6f%12.6f\n", input.sibry, input.simag, input.signip, input.rmaxis, input.zmaxis))
+        return print(io, @sprintf("%12.6f%12.6f%12.6f%12.6f%12.6f\n", input.sibry, input.simag, input.signip, input.rmaxis, input.zmaxis))
 
     end
 end
@@ -138,15 +138,15 @@ function write_options(vessel_hfs::Float64, vessel_lfs::Float64)
  jumpcor=2 ! smoothed number of gridpoints in plasma center
  flast=10. ! fudge factor in colrad model to increase loss of highest state
  Rmax = ", vessel_lfs)
-        println(io," ! start of NBI rays (m) -> set similar to vacuum vessel
- Rmin = ", vessel_hfs)
-        println(io," ! end of NBI rays (m) -> set similar to vacuum vessel
- Rlim = 2.26 ! flux surface passing through Rlim and zlim is considered as limiter
- zlim = -0.05
- torqjxb_model = 3 ! 0 = no orbit averaging (oav) deposition, 1 = calc jxb, 2 = oav deposition, 3 = calc jxb, but rescale it to match deposited torque
- beamlosswall=.false. ! option to simulate partial beam scraping on the vessel wall - switch off for DIII-D
- table_path= '", table_path, "'")
-        println(
+        println(io, " ! start of NBI rays (m) -> set similar to vacuum vessel
+  Rmin = ", vessel_hfs)
+        println(io, " ! end of NBI rays (m) -> set similar to vacuum vessel
+  Rlim = 2.26 ! flux surface passing through Rlim and zlim is considered as limiter
+  zlim = -0.05
+  torqjxb_model = 3 ! 0 = no orbit averaging (oav) deposition, 1 = calc jxb, 2 = oav deposition, 3 = calc jxb, but rescale it to match deposited torque
+  beamlosswall=.false. ! option to simulate partial beam scraping on the vessel wall - switch off for DIII-D
+  table_path= '", table_path, "'")
+        return println(
             io,
             "/
  &numerics
@@ -158,12 +158,12 @@ function write_options(vessel_hfs::Float64, vessel_lfs::Float64)
  /
  &fpsol
  /
- 
- 
+
+
         "
         )
     end
- end 
+end
 
 function write_beams(all_inputs::Vector{RABBITinput})
     open("beams.dat", "w") do io
@@ -182,25 +182,26 @@ function write_beams(all_inputs::Vector{RABBITinput})
         println(io, "# Particle fraction of full/half/third energy:")
         print(io, cropdata_f(all_inputs[1].particle_fraction, 3))
         println(io, "# A beam [u]")
-        print(io, cropdata_f(all_inputs[1].a_beam, 5))
+        return print(io, cropdata_f(all_inputs[1].a_beam, 5))
     end
 
 end
 
 """
-    run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true, filename::String="run")
+    run_RABBIT(all_inputs::Vector{RABBITinput}; remove_inputs::Bool=true)
 
-Writes RABBIT input files (equ_X.dat, timetraces.dat, beams.dat, options.nml) to a run directory and executes RABBIT on that directory. 
-Set remove_inputs=false to keep run directory containing full input and output files. 
+Writes RABBIT input files (equ_X.dat, timetraces.dat, beams.dat, options.nml) to a run directory and executes RABBIT on that directory.
 
+Set remove_inputs=false to keep run directory containing full input and output files.
 """
+function run_RABBIT(all_inputs::Vector{RABBITinput}, vessel_hfs::Float64, vessel_lfs::Float64; remove_inputs::Bool=true)
+    folder = mktempdir()
 
-function run_RABBIT(all_inputs::Vector{RABBITinput}, vessel_hfs::Float64, vessel_lfs::Float64; remove_inputs::Bool=true, filename::String="run")
     exec_path = abspath(joinpath(dirname(@__DIR__), "rabbit"))
-    mkdir("$filename")
 
+    old_dir = pwd()
     try
-        cd("$filename")
+        cd(folder)
 
         write_equilibria(all_inputs)
 
@@ -225,15 +226,15 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}, vessel_hfs::Float64, vessel
         txt = open("command.log", "r") do io
             return split(read(io, String), "\n")
         end
-        rm("$filename", recursive=true)
         @error "Error running RABBIT" * join(txt[max(1, length(txt) - 50):end], "\n")
         rethrow(e)
+    finally
+        cd(old_dir)
     end
 
     if remove_inputs
-        rm("$filename", recursive=true)
+        rm(folder; force=true, recursive=true)
     end
 
     return output
-
 end
