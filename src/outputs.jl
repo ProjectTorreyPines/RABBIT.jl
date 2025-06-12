@@ -9,11 +9,11 @@ Base.@kwdef mutable struct RABBIToutput
     time_data::Union{Vector{<:Real},Missing} = missing 
 end
 
-function read_outputs(path::String, filename::String)
+function read_outputs(filename::String)
     struct_len = 4 
 
     outputs = RABBIToutput[]
-    result_dir = abspath(joinpath(path,filename))
+    result_dir = filename
 
     for item in readdir(result_dir)
         if contains(item, "beam") && isdir(joinpath(result_dir, item))

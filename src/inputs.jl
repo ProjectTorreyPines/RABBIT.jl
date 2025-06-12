@@ -221,7 +221,7 @@ function run_RABBIT(all_inputs::Vector{RABBITinput}, vessel_hfs::Float64, vessel
 
     output = try
         run(Cmd(`bash command.sh`))
-        read_outputs(pwd(), folder)
+        read_outputs(folder)
     catch e
         txt = open("command.log", "r") do io
             return split(read(io, String), "\n")
